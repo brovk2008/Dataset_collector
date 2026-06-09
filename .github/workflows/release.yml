@@ -23,6 +23,7 @@ jobs:
             artifact_name: linux
 
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
 
     steps:
       - uses: actions/checkout@v4

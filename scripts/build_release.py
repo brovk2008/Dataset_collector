@@ -14,12 +14,33 @@ DIST = ROOT / "dist"
 SRC = ROOT / "src" / "dataset_collector"
 SEP = ";" if sys.platform == "win32" else ":"
 
+# Keep the bundle lean — avoid pulling optional heavy stacks via pandas hooks.
+_EXCLUDED_MODULES = (
+  "matplotlib",
+  "scipy",
+  "IPython",
+  "jupyter",
+  "notebook",
+  "numba",
+  "torch",
+  "tensorflow",
+  "tensorboard",
+  "sklearn",
+  "pytest",
+  "pyarrow",
+)
+
+
+def _exclude_args() -> list[str]:
+  return [f"--exclude-module={name}" for name in _EXCLUDED_MODULES]
+
 
 def _common_args(*, clean: bool = True) -> list[str]:
   args = [
     str(ROOT / "run.py"),
     "--noconfirm",
     "--windowed",
+    "--noupx",
     f"--paths={ROOT / 'src'}",
     f"--add-data={SRC / 'config'}{SEP}dataset_collector/config",
     f"--add-data={SRC / 'ui' / 'styles'}{SEP}dataset_collector/ui/styles",
@@ -32,6 +53,7 @@ def _common_args(*, clean: bool = True) -> list[str]:
     "--hidden-import=yaml",
     "--hidden-import=httpx",
     "--hidden-import=pandas",
+    *_exclude_args(),
   ]
   if clean:
     args.insert(1, "--clean")
@@ -45,25 +67,28 @@ def run_pyinstaller(args: list[str]) -> int:
 
 
 def build_windows() -> int:
-  # Build portable first; second build must not --clean or it wipes dist/.
-  if run_pyinstaller([*_common_args(clean=True), "--onedir", "--name=Dataset_Collector_Portable"]) != 0:
+  # Single onefile build — fast and reliable on CI. Portable zip wraps the same EXE.
+  if run_pyinstaller([*_common_args(clean=True), "--onefile", "--name=Dataset_Collector_Setup"]) != 0:
     return 1
-  if run_pyinstaller([*_common_args(clean=False), "--onefile", "--name=Dataset_Collector_Setup"]) != 0:
-    return 1
-
-  portable_dir = DIST / "Dataset_Collector_Portable"
-  zip_path = DIST / "Dataset_Collector_Portable.zip"
-  if portable_dir.exists():
-    if zip_path.exists():
-      zip_path.unlink()
-    shutil.make_archive(str(zip_path.with_suffix("")), "zip", portable_dir)
-    print(f"Portable ZIP: {zip_path}")
 
   setup_exe = DIST / "Dataset_Collector_Setup.exe"
   if not setup_exe.exists():
     print("ERROR: Dataset_Collector_Setup.exe was not created", file=sys.stderr)
     return 1
+
+  portable_dir = DIST / "Dataset_Collector_Portable"
+  if portable_dir.exists():
+    shutil.rmtree(portable_dir)
+  portable_dir.mkdir(parents=True)
+  shutil.copy2(setup_exe, portable_dir / "Dataset_Collector.exe")
+
+  zip_path = DIST / "Dataset_Collector_Portable.zip"
+  if zip_path.exists():
+    zip_path.unlink()
+  shutil.make_archive(str(zip_path.with_suffix("")), "zip", portable_dir)
+
   print(f"Setup EXE: {setup_exe}")
+  print(f"Portable ZIP: {zip_path}")
   return 0
 
 
