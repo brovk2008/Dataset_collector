@@ -1,5 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
-  <rect width="1280" height="720" fill="#1e1e1e"/>
-  <rect x="240" y="80" width="800" height="560" rx="8" fill="#252526" stroke="#4F8CFF" stroke-width="2"/>
-  <text x="640" y="360" fill="#888" font-family="Segoe UI, sans-serif" font-size="24" text-anchor="middle">Dataset Details</text>
-</svg>

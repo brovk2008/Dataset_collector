@@ -1,8 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
-  <rect width="1280" height="720" fill="#1e1e1e"/>
-  <rect x="200" y="60" width="880" height="120" rx="6" fill="#252526"/>
-  <text x="240" y="110" fill="#cccccc" font-family="Segoe UI, sans-serif" font-size="14">Kaggle (Optional)</text>
-  <rect x="200" y="200" width="880" height="100" rx="6" fill="#252526"/>
-  <text x="240" y="250" fill="#cccccc" font-family="Segoe UI, sans-serif" font-size="14">GitHub Token (Optional)</text>
-  <text x="640" y="400" fill="#888" font-family="Segoe UI, sans-serif" font-size="24" text-anchor="middle">Settings Page</text>
-</svg>

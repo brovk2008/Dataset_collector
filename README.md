@@ -36,15 +36,15 @@ No Python installation required — download a release for your platform.
 
 | Main Search | Results |
 |:---:|:---:|
-| ![Search](docs/screenshots/search.svg) | ![Results](docs/screenshots/results.svg) |
+| ![Search](docs/screenshots/search.png) | ![Results](docs/screenshots/results.png) |
 
 | Dataset Details | Download Manager |
 |:---:|:---:|
-| ![Details](docs/screenshots/details.svg) | ![Downloads](docs/screenshots/downloads.svg) |
+| ![Details](docs/screenshots/details.png) | ![Downloads](docs/screenshots/downloads.png) |
 
 | Settings | Library |
 |:---:|:---:|
-| ![Settings](docs/screenshots/settings.svg) | ![Library](docs/screenshots/library.svg) |
+| ![Settings](docs/screenshots/settings.png) | ![Library](docs/screenshots/library.png) |
 
 ---
 

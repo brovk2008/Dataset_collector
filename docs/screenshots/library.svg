@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
-  <rect width="1280" height="720" fill="#1e1e1e"/>
-  <text x="80" y="100" fill="#4F8CFF" font-family="Segoe UI, sans-serif" font-size="18">Disk Usage: 2.4 GB</text>
-  <rect x="48" y="120" width="1184" height="480" rx="6" fill="#252526"/>
-  <text x="640" y="380" fill="#888" font-family="Segoe UI, sans-serif" font-size="24" text-anchor="middle">Dataset Library</text>
-</svg>

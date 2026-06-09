@@ -172,7 +172,7 @@ class MainWindow(QMainWindow):
       self._logger,
       self._download_engine,
       self._creds,
-      config.logs_dir,
+      self._config.logs_dir,
     )
     self._tabs.addTab(self._health_panel, "System Health")
 
