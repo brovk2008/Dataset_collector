@@ -28,6 +28,8 @@ _EXCLUDED_MODULES = (
   "sklearn",
   "pytest",
   "pyarrow",
+  # kaggle calls authenticate() on import and exits without credentials — breaks PyInstaller.
+  "kaggle",
 )
 
 

@@ -47,6 +47,10 @@ jobs:
           pip install -e .
 
       - name: Build release
+        env:
+          # Prevent kaggle package from exiting during PyInstaller analysis if imported.
+          KAGGLE_USERNAME: ci
+          KAGGLE_KEY: ci
         run: python scripts/build_release.py
 
       - name: Upload Windows artifacts
