@@ -15,22 +15,27 @@ SRC = ROOT / "src" / "dataset_collector"
 SEP = ";" if sys.platform == "win32" else ":"
 
 
-def _common_args() -> list[str]:
-  return [
+def _common_args(*, clean: bool = True) -> list[str]:
+  args = [
     str(ROOT / "run.py"),
     "--noconfirm",
-    "--clean",
     "--windowed",
     f"--paths={ROOT / 'src'}",
     f"--add-data={SRC / 'config'}{SEP}dataset_collector/config",
     f"--add-data={SRC / 'ui' / 'styles'}{SEP}dataset_collector/ui/styles",
-    "--hidden-import=kaggle",
-    "--hidden-import=kaggle.api.kaggle_api_extended",
     "--hidden-import=cryptography.fernet",
     "--hidden-import=langdetect",
     "--hidden-import=PIL.Image",
-    "--collect-submodules=PySide6",
+    "--hidden-import=PySide6.QtCore",
+    "--hidden-import=PySide6.QtGui",
+    "--hidden-import=PySide6.QtWidgets",
+    "--hidden-import=yaml",
+    "--hidden-import=httpx",
+    "--hidden-import=pandas",
   ]
+  if clean:
+    args.insert(1, "--clean")
+  return args
 
 
 def run_pyinstaller(args: list[str]) -> int:
@@ -40,9 +45,10 @@ def run_pyinstaller(args: list[str]) -> int:
 
 
 def build_windows() -> int:
-  if run_pyinstaller([*_common_args(), "--onefile", "--name=Dataset_Collector_Setup"]) != 0:
+  # Build portable first; second build must not --clean or it wipes dist/.
+  if run_pyinstaller([*_common_args(clean=True), "--onedir", "--name=Dataset_Collector_Portable"]) != 0:
     return 1
-  if run_pyinstaller([*_common_args(), "--onedir", "--name=Dataset_Collector_Portable"]) != 0:
+  if run_pyinstaller([*_common_args(clean=False), "--onefile", "--name=Dataset_Collector_Setup"]) != 0:
     return 1
 
   portable_dir = DIST / "Dataset_Collector_Portable"
@@ -52,7 +58,12 @@ def build_windows() -> int:
       zip_path.unlink()
     shutil.make_archive(str(zip_path.with_suffix("")), "zip", portable_dir)
     print(f"Portable ZIP: {zip_path}")
-  print(f"Setup EXE: {DIST / 'Dataset_Collector_Setup.exe'}")
+
+  setup_exe = DIST / "Dataset_Collector_Setup.exe"
+  if not setup_exe.exists():
+    print("ERROR: Dataset_Collector_Setup.exe was not created", file=sys.stderr)
+    return 1
+  print(f"Setup EXE: {setup_exe}")
   return 0
 
 
@@ -62,11 +73,13 @@ def build_macos() -> int:
 
   app_path = DIST / "Dataset_Collector.app"
   zip_path = DIST / "Dataset_Collector-macOS.zip"
-  if app_path.exists():
-    if zip_path.exists():
-      zip_path.unlink()
-    shutil.make_archive(str(zip_path.with_suffix("")), "zip", DIST, "Dataset_Collector.app")
-    print(f"macOS ZIP: {zip_path}")
+  if not app_path.exists():
+    print("ERROR: Dataset_Collector.app was not created", file=sys.stderr)
+    return 1
+  if zip_path.exists():
+    zip_path.unlink()
+  shutil.make_archive(str(zip_path.with_suffix("")), "zip", DIST, "Dataset_Collector.app")
+  print(f"macOS ZIP: {zip_path}")
   return 0
 
 
@@ -77,11 +90,13 @@ def build_linux() -> int:
   binary = DIST / "Dataset_Collector"
   archive_base = DIST / "Dataset_Collector-Linux"
   archive_path = Path(f"{archive_base}.tar.gz")
-  if binary.exists():
-    if archive_path.exists():
-      archive_path.unlink()
-    shutil.make_archive(str(archive_base), "gztar", DIST, "Dataset_Collector")
-    print(f"Linux archive: {archive_path}")
+  if not binary.exists():
+    print("ERROR: Dataset_Collector binary was not created", file=sys.stderr)
+    return 1
+  if archive_path.exists():
+    archive_path.unlink()
+  shutil.make_archive(str(archive_base), "gztar", DIST, "Dataset_Collector")
+  print(f"Linux archive: {archive_path}")
   return 0
 
 

@@ -6,8 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![Release](https://img.shields.io/github/v/release/brovk2008/Dataset_collector?label=release)](https://github.com/brovk2008/Dataset_collector/releases/latest)
-[![Downloads](https://img.shields.io/github/downloads/brovk2008/Dataset_collector/total)](https://github.com/brovk2008/Dataset_collector/releases)
+[![Release](https://img.shields.io/badge/release-v1.1.1-blue)](https://github.com/brovk2008/Dataset_collector/releases/tag/v1.1.1)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/brovk2008/Dataset_collector/releases)
 
 No Python installation required — download a release for your platform.
@@ -18,15 +17,17 @@ No Python installation required — download a release for your platform.
 
 ## Download Latest Release
 
+**[View all releases →](https://github.com/brovk2008/Dataset_collector/releases)**
+
 | Platform | Download |
 |----------|----------|
-| **Windows Installer** | [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe) |
-| **Windows Portable** | [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip) |
-| **macOS** | [Dataset_Collector-macOS.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-macOS.zip) |
-| **Linux** | [Dataset_Collector-Linux.tar.gz](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-Linux.tar.gz) |
+| **Windows Installer** | [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector_Setup.exe) |
+| **Windows Portable** | [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector_Portable.zip) |
+| **macOS** | [Dataset_Collector-macOS.zip](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector-macOS.zip) |
+| **Linux** | [Dataset_Collector-Linux.tar.gz](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector-Linux.tar.gz) |
 | **Source Code** | [GitHub Repository](https://github.com/brovk2008/Dataset_collector) |
 
-> Create a tag (e.g. `v1.1.0`) and GitHub Actions builds Windows, macOS, and Linux release assets automatically.
+> Downloads are built automatically by GitHub Actions when a version tag is pushed. If a link returns 404, check [Actions](https://github.com/brovk2008/Dataset_collector/actions) — the build may still be running.
 
 **Support the project:** [Donate via Razorpay](https://rzp.io/rzp/ABzyauZu)
 
@@ -87,18 +88,18 @@ No Python installation required — download a release for your platform.
 
 ### Windows
 
-1. **Installer:** [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe) — run and launch
-2. **Portable:** [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip) — extract and run `Dataset_Collector.exe`
+1. **Installer:** [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector_Setup.exe) — run and launch
+2. **Portable:** [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector_Portable.zip) — extract and run `Dataset_Collector.exe`
 
 ### macOS
 
-1. Download [Dataset_Collector-macOS.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-macOS.zip)
+1. Download [Dataset_Collector-macOS.zip](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector-macOS.zip)
 2. Extract and open `Dataset_Collector.app`
 3. If macOS blocks the app: right-click → **Open** → confirm (unsigned build)
 
 ### Linux
 
-1. Download [Dataset_Collector-Linux.tar.gz](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-Linux.tar.gz)
+1. Download [Dataset_Collector-Linux.tar.gz](https://github.com/brovk2008/Dataset_collector/releases/download/v1.1.1/Dataset_Collector-Linux.tar.gz)
 2. Extract: `tar -xzf Dataset_Collector-Linux.tar.gz`
 3. Run: `chmod +x Dataset_Collector && ./Dataset_Collector`
 
