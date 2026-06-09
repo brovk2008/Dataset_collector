@@ -1,0 +1,36 @@
+[
+  {
+    "dataset_name": "Medical MNIST",
+    "source": "Kaggle",
+    "url": "https://www.kaggle.com/datasets/andrewmvd/medical-mnist",
+    "size": "2.4 GB",
+    "files": [
+      "images.zip",
+      "labels.csv"
+    ],
+    "license": "MIT",
+    "timestamp": "2026-06-09T12:00:00+00:00"
+  },
+  {
+    "dataset_name": "satellite-image-deep-learning",
+    "source": "GitHub",
+    "url": "https://github.com/robmarkcole/satellite-image-deep-learning",
+    "size": "45.2 MB",
+    "files": [
+      "Primary resource at https://github.com/robmarkcole/satellite-image-deep-learning"
+    ],
+    "license": "MIT",
+    "timestamp": "2026-06-09T12:00:00+00:00"
+  },
+  {
+    "dataset_name": "imdb",
+    "source": "HuggingFace",
+    "url": "https://huggingface.co/datasets/imdb",
+    "size": "Unknown",
+    "files": [
+      "Primary resource at https://huggingface.co/datasets/imdb"
+    ],
+    "license": "Unknown",
+    "timestamp": "2026-06-09T12:00:00+00:00"
+  }
+]

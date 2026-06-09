@@ -1,0 +1,18 @@
+Dataset Name: Medical MNIST
+Source: Kaggle
+URL: https://www.kaggle.com/datasets/andrewmvd/medical-mnist
+Size: 2.4 GB
+Files:
+  * images.zip
+  * labels.csv
+License: MIT
+Timestamp: 2026-06-09T12:00:00+00:00
+
+Dataset Name: satellite-image-deep-learning
+Source: GitHub
+URL: https://github.com/robmarkcole/satellite-image-deep-learning
+Size: 45.2 MB
+Files:
+  * Primary resource at https://github.com/robmarkcole/satellite-image-deep-learning
+License: MIT
+Timestamp: 2026-06-09T12:00:00+00:00

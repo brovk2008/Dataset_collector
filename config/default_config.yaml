@@ -1,0 +1,34 @@
+app:
+  name: Dataset_Collector
+  version: "1.0.0"
+
+paths:
+  download_dir: ~/Dataset_Collector/downloads
+  manifest_dir: ~/Dataset_Collector/manifests
+  library_dir: ~/Dataset_Collector/library
+  logs_dir: ~/Dataset_Collector/logs
+
+download:
+  max_concurrent: 4
+  chunk_size: 8192
+  retry_attempts: 3
+  retry_delay_seconds: 5
+  timeout_seconds: 120
+
+search:
+  max_results_per_source: 100
+  request_timeout_seconds: 30
+  rate_limit_delay_seconds: 0.5
+
+api_keys:
+  # Kaggle: get keys at https://www.kaggle.com/settings — required for reliable search/download
+  kaggle_username: ""
+  kaggle_key: ""
+  github_token: ""
+  huggingface_token: ""
+  india_data_api_key: ""
+
+ui:
+  theme: dark
+  window_width: 1280
+  window_height: 800
