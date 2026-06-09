@@ -4,13 +4,15 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QUrl
+from PySide6.QtGui import QDesktopServices
 from PySide6.QtWidgets import (
     QHBoxLayout,
     QLabel,
     QMainWindow,
     QMessageBox,
     QProgressBar,
+    QPushButton,
     QSplitter,
     QStatusBar,
     QTabWidget,
@@ -20,6 +22,7 @@ from PySide6.QtWidgets import (
 
 from dataset_collector.analyzer.dataset_analyzer import DatasetAnalyzer
 from dataset_collector.core.config_manager import ConfigManager
+from dataset_collector.core.constants import DONATE_URL
 from dataset_collector.core.credential_store import CredentialStore
 from dataset_collector.core.enums import DataSource, DownloadStatus, ManifestFormat
 from dataset_collector.core.models import DatasetResult
@@ -97,6 +100,11 @@ class MainWindow(QMainWindow):
     header.addSpacing(12)
     header.addWidget(subtitle)
     header.addStretch()
+    donate_btn = QPushButton("Donate")
+    donate_btn.setObjectName("donateButton")
+    donate_btn.setToolTip("Support Dataset_Collector development")
+    donate_btn.clicked.connect(self._open_donate_page)
+    header.addWidget(donate_btn)
     main_layout.addLayout(header)
 
     # Tabs
@@ -187,6 +195,9 @@ class MainWindow(QMainWindow):
     self._download_panel.retry_clicked.connect(self._on_retry_download)
     self._library_panel.analyze_requested.connect(self._on_analyze)
     self._settings_panel.credentials_changed.connect(self._on_credentials_changed)
+
+  def _open_donate_page(self) -> None:
+    QDesktopServices.openUrl(QUrl(DONATE_URL))
 
   def _on_credentials_changed(self) -> None:
     self._search_engine.reload_connectors()

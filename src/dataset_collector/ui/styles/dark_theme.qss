@@ -104,6 +104,19 @@ QPushButton:disabled {
     border-color: #2A2A2A;
 }
 
+QPushButton#donateButton {
+    background-color: #0C2451;
+    border: 1px solid #1a3a6e;
+    color: #FFFFFF;
+    padding: 6px 14px;
+    font-weight: 600;
+}
+
+QPushButton#donateButton:hover {
+    background-color: #1a3a6e;
+    border-color: #4F8CFF;
+}
+
 QPushButton#primaryButton {
     background-color: #4F8CFF;
     border: 1px solid #4F8CFF;

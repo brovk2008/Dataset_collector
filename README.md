@@ -26,7 +26,7 @@ No Python installation required for Windows releases.
 
 > **First release?** Create a tag (e.g. `v1.0.0`) and GitHub Actions will automatically build and attach the Windows EXE and portable ZIP.
 
-**Support the project:** [Donate via Razorpay](docs/donate.html)
+**Support the project:** [Donate via Razorpay](https://rzp.io/rzp/ABzyauZu)
 
 ---
 
@@ -202,19 +202,9 @@ Bug reports and feature requests are welcome via [GitHub Issues](https://github.
 
 If Dataset_Collector saves you time, consider supporting development:
 
-[![Donate via Razorpay](https://img.shields.io/badge/Donate-Razorpay-0C2451?style=for-the-badge&logo=razorpay&logoColor=white)](https://brovk2008.github.io/Dataset_collector/docs/donate.html)
+[![Donate via Razorpay](https://img.shields.io/badge/Donate-Razorpay-0C2451?style=for-the-badge&logo=razorpay&logoColor=white)](https://rzp.io/rzp/ABzyauZu)
 
-> GitHub README cannot render payment scripts. Use the button above, or open [docs/donate.html](docs/donate.html) locally / via [GitHub Pages](https://brovk2008.github.io/Dataset_collector/docs/donate.html).
-
-```html
-<form>
-  <script
-    src="https://checkout.razorpay.com/v1/payment-button.js"
-    data-payment_button_id="pl_SzYh0ZoqCkMUh2"
-    async>
-  </script>
-</form>
-```
+The desktop app also includes a **Donate** button in the header that opens the same page.
 
 ---
 
