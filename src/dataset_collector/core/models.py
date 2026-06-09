@@ -47,6 +47,11 @@ class DatasetResult:
     files: list[str] = field(default_factory=list)
     download_urls: list[str] = field(default_factory=list)
     relevance_score: float = 0.0
+    quality_score: float = 0.0
+    rank_score: int = 0
+    available_sources: list[str] = field(default_factory=list)
+    requires_auth: bool = False
+    auth_message: str = ""
     metadata: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -99,6 +104,7 @@ class ImageProfile:
 @dataclass
 class TextProfile:
     character_count: int
+    word_count: int
     detected_language: str
 
 

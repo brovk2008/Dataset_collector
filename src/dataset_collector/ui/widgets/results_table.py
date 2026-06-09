@@ -29,7 +29,7 @@ class ResultsTable(QWidget):
   selection_changed = Signal()
   dataset_activated = Signal(object)
 
-  COLUMNS = ["", "Dataset Name", "Source", "Relevance", "Size", "Files", "License", "Last Updated"]
+  COLUMNS = ["", "Dataset Name", "Rank", "Quality", "Sources", "Size", "License", "Updated"]
 
   def __init__(self, parent: QWidget | None = None) -> None:
     super().__init__(parent)
@@ -78,6 +78,10 @@ class ResultsTable(QWidget):
     self._details_btn = QPushButton("View Details")
     self._details_btn.clicked.connect(self._open_selected_details)
     controls.addWidget(self._details_btn)
+
+    self._compare_btn = QPushButton("Compare Selected")
+    self._compare_btn.clicked.connect(self._compare_selected)
+    controls.addWidget(self._compare_btn)
     layout.addLayout(controls)
 
     self._table = QTableWidget()
@@ -181,16 +185,11 @@ class ResultsTable(QWidget):
       desc = (ds.description or "")[:200]
       name_item.setToolTip(f"{ds.name}\n\n{desc}\n\nDouble-click for details")
       self._table.setItem(row, 1, name_item)
-      self._table.setItem(row, 2, QTableWidgetItem(ds.source.value))
-
-      rel_item = QTableWidgetItem()
-      rel_item.setData(Qt.ItemDataRole.DisplayRole, ds.relevance_score)
-      rel_item.setText(f"{ds.relevance_score * 100:.0f}%")
-      self._table.setItem(row, 3, rel_item)
-
-      self._table.setItem(row, 4, QTableWidgetItem(ds.size_display))
-      files_str = str(ds.file_count) if ds.file_count is not None else "—"
-      self._table.setItem(row, 5, QTableWidgetItem(files_str))
+      self._table.setItem(row, 2, QTableWidgetItem(f"{ds.rank_score}/100"))
+      self._table.setItem(row, 3, QTableWidgetItem(f"{ds.quality_score}/10"))
+      sources = ", ".join(ds.available_sources) if ds.available_sources else ds.source.value
+      self._table.setItem(row, 4, QTableWidgetItem(sources))
+      self._table.setItem(row, 5, QTableWidgetItem(ds.size_display))
       self._table.setItem(row, 6, QTableWidgetItem(ds.license_info))
       updated = ds.last_updated.strftime("%Y-%m-%d") if ds.last_updated else "—"
       self._table.setItem(row, 7, QTableWidgetItem(updated))
@@ -229,6 +228,15 @@ class ResultsTable(QWidget):
     ds = self._dataset_at_row(row)
     if ds:
       self.dataset_activated.emit(ds)
+
+  def _compare_selected(self) -> None:
+    selected = self.get_selected()
+    if len(selected) < 2:
+      from PySide6.QtWidgets import QMessageBox
+      QMessageBox.information(self, "Compare", "Select at least 2 datasets to compare.")
+      return
+    from dataset_collector.ui.widgets.comparison_dialog import ComparisonDialog
+    ComparisonDialog(selected[:5], self).exec()
 
   def _open_selected_details(self) -> None:
     rows = self._table.selectionModel().selectedRows()

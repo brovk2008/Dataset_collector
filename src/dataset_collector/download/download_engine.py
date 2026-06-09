@@ -12,9 +12,15 @@ import aiofiles
 import httpx
 
 from dataset_collector.core.config_manager import ConfigManager
+from dataset_collector.core.credential_store import CredentialStore
 from dataset_collector.core.enums import DataSource, DownloadStatus
 from dataset_collector.core.models import DatasetResult, DownloadTask
 from dataset_collector.logging.logger import AppLogger
+
+KAGGLE_AUTH_MSG = (
+  "This dataset requires Kaggle authentication. "
+  "Connect your Kaggle account in Settings to enable downloading."
+)
 
 BROWSER_HEADERS = {
   "User-Agent": (
@@ -27,9 +33,15 @@ BROWSER_HEADERS = {
 class DownloadEngine:
   """Manages concurrent dataset downloads with queue control."""
 
-  def __init__(self, config: ConfigManager, logger: AppLogger) -> None:
+  def __init__(
+    self,
+    config: ConfigManager,
+    logger: AppLogger,
+    credential_store: CredentialStore | None = None,
+  ) -> None:
     self._config = config
     self._logger = logger
+    self._creds = credential_store or CredentialStore()
     self._tasks: dict[str, DownloadTask] = {}
     self._paused = False
     self._cancelled = False
@@ -128,10 +140,15 @@ class DownloadEngine:
           self._logger.log_download(dataset.name, "completed", path=task.local_path)
       except Exception as e:
         task.status = DownloadStatus.FAILED
-        task.error_message = str(e)
+        err = str(e)
+        if dataset.source == DataSource.KAGGLE and ("401" in err or "403" in err or "auth" in err.lower()):
+          err = KAGGLE_AUTH_MSG
+          dataset.requires_auth = True
+          dataset.auth_message = KAGGLE_AUTH_MSG
+        task.error_message = err
         task.failed_files += 1
-        self._logger.log_download(dataset.name, "failed", error=str(e))
-        self._logger.error(f"Download failed: {dataset.name}", error=str(e))
+        self._logger.log_download(dataset.name, "failed", error=err)
+        self._logger.error(f"Download failed: {dataset.name}", error=err)
 
       if progress_callback:
         progress_callback(task)
@@ -144,8 +161,8 @@ class DownloadEngine:
     progress_callback: Callable[[DownloadTask], None] | None,
   ) -> None:
     ref = dataset.metadata.get("ref", "")
-    username = self._config.get_api_key("kaggle_username")
-    api_key = self._config.get_api_key("kaggle_key")
+    username = self._creds.kaggle_username() or self._config.get_api_key("kaggle_username")
+    api_key = self._creds.kaggle_key() or self._config.get_api_key("kaggle_key")
 
     if ref and username and api_key:
       await self._download_kaggle_sdk(ref, dest_dir, task, progress_callback)
@@ -187,7 +204,7 @@ class DownloadEngine:
     dataset_id = dataset.metadata.get("dataset_id", dataset.name)
     base = f"https://huggingface.co/datasets/{dataset_id}/resolve/main/"
     headers = dict(BROWSER_HEADERS)
-    token = self._config.get_api_key("huggingface_token")
+    token = self._creds.huggingface_token() or self._config.get_api_key("huggingface_token")
     if token:
       headers["Authorization"] = f"Bearer {token}"
 

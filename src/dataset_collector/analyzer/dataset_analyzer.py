@@ -99,6 +99,7 @@ class DatasetAnalyzer:
       lines.extend([
         "Text Analysis:",
         f"  Character Count: {tp.character_count:,}",
+        f"  Word Count: {tp.word_count:,}",
         f"  Detected Language: {tp.detected_language}",
         "",
       ])
@@ -175,7 +176,8 @@ class DatasetAnalyzer:
         language = detect(sample[:5000])
       except LangDetectException:
         pass
-    return TextProfile(character_count=char_count, detected_language=language)
+    word_count = len(sample.split()) if sample.strip() else 0
+    return TextProfile(character_count=char_count, word_count=word_count, detected_language=language)
 
   def _profile_to_dict(self, profile: DatasetProfile) -> dict:
     d = {

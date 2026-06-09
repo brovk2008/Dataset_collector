@@ -19,30 +19,45 @@ from dataset_collector.search.connectors import (
     KaggleConnector,
     ResearchConnector,
 )
+from dataset_collector.core.credential_store import CredentialStore
+from dataset_collector.search.dedup import merge_duplicates
 from dataset_collector.search.relevance import rank_results
 
 
 class SearchEngine:
   """Coordinates multi-source dataset searches."""
 
-  def __init__(self, config: ConfigManager, logger: AppLogger) -> None:
+  def __init__(
+    self,
+    config: ConfigManager,
+    logger: AppLogger,
+    credential_store: CredentialStore | None = None,
+  ) -> None:
     self._config = config
     self._logger = logger
+    self._creds = credential_store or CredentialStore()
     self._connectors: dict[DataSource, BaseConnector] = self._build_connectors()
     self._cancelled = False
+
+  def reload_connectors(self) -> None:
+    """Refresh connectors after credential changes."""
+    self._connectors = self._build_connectors()
+
+  def _resolve(self, key: str) -> str:
+    return self._creds.get(key) or self._config.get_api_key(key)
 
   def _build_connectors(self) -> dict[DataSource, BaseConnector]:
     return {
       DataSource.KAGGLE: KaggleConnector(
-        username=self._config.get_api_key("kaggle_username"),
-        api_key=self._config.get_api_key("kaggle_key"),
+        username=self._resolve("kaggle_username"),
+        api_key=self._resolve("kaggle_key"),
       ),
-      DataSource.GITHUB: GitHubConnector(token=self._config.get_api_key("github_token")),
+      DataSource.GITHUB: GitHubConnector(token=self._resolve("github_token")),
       DataSource.HUGGINGFACE: HuggingFaceConnector(
-        token=self._config.get_api_key("huggingface_token")
+        token=self._resolve("huggingface_token")
       ),
       DataSource.GOVERNMENT: GovernmentConnector(
-        india_api_key=self._config.get_api_key("india_data_api_key"),
+        india_api_key=self._resolve("india_data_api_key"),
       ),
       DataSource.RESEARCH: ResearchConnector(),
       DataSource.INTERNET_ARCHIVE: InternetArchiveConnector(),
@@ -97,17 +112,9 @@ class SearchEngine:
       if si < total_sources - 1:
         await asyncio.sleep(rate_delay)
 
-    # Deduplicate by URL and name
-    seen: set[str] = set()
-    unique: list[DatasetResult] = []
-    for r in all_results:
-      key = f"{r.url}|{r.name}".lower()
-      if key not in seen:
-        seen.add(key)
-        unique.append(r)
-
-    # Score and rank by relevance to the query
-    ranked = rank_results(request.query, unique)
+    # Merge cross-source duplicates, then score and rank
+    merged = merge_duplicates(all_results)
+    ranked = rank_results(request.query, merged)
 
     self._logger.log_search(
       request.query,

@@ -89,12 +89,15 @@ class DownloadPanel(QWidget):
     self._speed_label.setObjectName("secondaryLabel")
     self._remaining_label = QLabel("Remaining: —")
     self._remaining_label.setObjectName("secondaryLabel")
-    self._files_label = QLabel("Files: 0 / Failed: 0")
-    self._files_label.setObjectName("secondaryLabel")
+    self._remaining_size_label = QLabel("Left: —")
+    self._remaining_size_label.setObjectName("secondaryLabel")
+    self._queue_label = QLabel("Queue: 0 | OK: 0 | Failed: 0")
+    self._queue_label.setObjectName("secondaryLabel")
     stats_layout.addWidget(self._speed_label)
     stats_layout.addWidget(self._remaining_label)
+    stats_layout.addWidget(self._remaining_size_label)
     stats_layout.addStretch()
-    stats_layout.addWidget(self._files_label)
+    stats_layout.addWidget(self._queue_label)
     progress_layout.addLayout(stats_layout)
 
     self._log_output = QTextEdit()
@@ -134,9 +137,11 @@ class DownloadPanel(QWidget):
     else:
       self._remaining_label.setText("Remaining: —")
 
-    self._files_label.setText(
-      f"Files: {task.downloaded_files} / Failed: {task.failed_files}"
-    )
+    if task.total_bytes:
+      left = max(task.total_bytes - task.downloaded_bytes, 0)
+      self._remaining_size_label.setText(f"Left: {_format_bytes(left)}")
+    else:
+      self._remaining_size_label.setText("Left: —")
 
     status_msg = f"[{task.status.value}] {ds.name}: {task.progress_percent:.1f}%"
     if task.error_message:
@@ -148,10 +153,22 @@ class DownloadPanel(QWidget):
     scrollbar = self._log_output.verticalScrollBar()
     scrollbar.setValue(scrollbar.maximum())
 
+  def update_queue_stats(self, total: int, completed: int, failed: int) -> None:
+    self._queue_label.setText(f"Queue: {total} | OK: {completed} | Failed: {failed}")
+
   def clear_log(self) -> None:
     self._log_output.clear()
     self._progress_bar.setValue(0)
     self._current_label.setText("Current: —")
+    self._queue_label.setText("Queue: 0 | OK: 0 | Failed: 0")
+
+
+def _format_bytes(size: int) -> str:
+  for unit in ("B", "KB", "MB", "GB", "TB"):
+    if size < 1024:
+      return f"{size:.1f} {unit}" if unit != "B" else f"{size} B"
+    size /= 1024
+  return f"{size:.1f} PB"
 
 
 def _format_speed(bps: float) -> str:

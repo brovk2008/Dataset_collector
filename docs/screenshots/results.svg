@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720">
+  <rect width="1280" height="720" fill="#1e1e1e"/>
+  <rect x="48" y="80" width="1184" height="560" rx="6" fill="#252526"/>
+  <text x="80" y="130" fill="#cccccc" font-family="Segoe UI, sans-serif" font-size="16">Results  Rank | Quality | Sources</text>
+  <line x1="80" y1="150" x2="1200" y2="150" stroke="#3c3c3c" stroke-width="1"/>
+  <text x="640" y="400" fill="#888" font-family="Segoe UI, sans-serif" font-size="24" text-anchor="middle">Results Page</text>
+</svg>

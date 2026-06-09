@@ -1,10 +1,48 @@
+<div align="center">
+
 # Dataset_Collector
 
-**Dataset_Collector** is an open-source desktop application for discovering, previewing, downloading, and analyzing datasets from multiple sources. Built for AI engineers, researchers, students, and data scientists.
+**Discover, analyze, and download datasets from multiple sources through a single interface.**
 
-![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)
-![PySide6](https://img.shields.io/badge/UI-PySide6-green)
-![License MIT](https://img.shields.io/badge/license-MIT-lightgrey)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
+[![Release](https://img.shields.io/github/v/release/brovk2008/Dataset_collector?label=release)](https://github.com/brovk2008/Dataset_collector/releases/latest)
+[![Downloads](https://img.shields.io/github/downloads/brovk2008/Dataset_collector/total)](https://github.com/brovk2008/Dataset_collector/releases)
+[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](https://github.com/brovk2008/Dataset_collector/releases)
+
+No Python installation required for Windows releases.
+
+</div>
+
+---
+
+## Download Latest Release
+
+| | |
+|---|---|
+| **Windows Installer** | [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe) |
+| **Portable Version** | [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip) |
+| **Source Code** | [GitHub Repository](https://github.com/brovk2008/Dataset_collector) |
+
+> **First release?** Create a tag (e.g. `v1.0.0`) and GitHub Actions will automatically build and attach the Windows EXE and portable ZIP.
+
+**Support the project:** [Donate via Razorpay](docs/donate.html)
+
+---
+
+## Screenshots
+
+| Main Search | Results |
+|:---:|:---:|
+| ![Search](docs/screenshots/search.svg) | ![Results](docs/screenshots/results.svg) |
+
+| Dataset Details | Download Manager |
+|:---:|:---:|
+| ![Details](docs/screenshots/details.svg) | ![Downloads](docs/screenshots/downloads.svg) |
+
+| Settings | Library |
+|:---:|:---:|
+| ![Settings](docs/screenshots/settings.svg) | ![Library](docs/screenshots/library.svg) |
 
 ---
 
@@ -12,49 +50,49 @@
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-source search** | Kaggle, GitHub, Hugging Face, Government portals, Research repos, Internet Archive, Google Dataset catalogs |
-| **Relevance ranking** | Results scored and sorted by how well they match your query |
-| **Paginated results** | 25 datasets per page with Prev/Next navigation |
-| **Size budget auto-select** | Set a total download budget (MB or GB) — best datasets auto-ticked after scan |
-| **Custom file types** | Type anything: `stickers`, `icons pack`, `FIR records`, etc. |
-| **Dataset detail view** | Double-click any result — copy URLs and download links |
-| **Direct downloads** | Kaggle, HuggingFace, GitHub, Government portals |
-| **Manifest generation** | Auto-save JSON + TXT manifests before downloading |
-| **Dataset profiling** | CSV, image, and text analysis after download |
-| **Library management** | Track downloads, disk usage, export metadata |
+| **Multi-source search** | Kaggle, GitHub, Hugging Face, Government portals, Research repos, Internet Archive, Google Dataset Search |
+| **Intelligent ranking** | Composite relevance score (0–100) based on query match, popularity, recency, and credibility |
+| **Quality scoring** | Per-dataset quality metric (0–10) for documentation, metadata, and availability |
+| **Duplicate detection** | Merges the same dataset found across multiple sources into one entry |
+| **Dataset comparison** | Side-by-side compare size, license, quality, and sources (2–5 datasets) |
+| **Download queue** | Pause, resume, cancel, retry failed; live speed, ETA, and remaining size |
+| **Auto profiling** | CSV, image, and text analysis saved locally after each download |
+| **Encrypted credentials** | Optional Kaggle, GitHub, Hugging Face tokens stored securely |
+| **Public-first access** | Works immediately without API keys for public datasets |
+| **Library management** | Search, sort, open folder, export metadata, delete datasets |
+| **System health** | Connector status, queue info, log export as ZIP |
 
 ---
 
 ## Supported Sources
 
-| Source | Search | Direct Download | Notes |
-|--------|--------|-----------------|-------|
-| Kaggle | ✅ | ✅ | API keys recommended for reliable search |
-| GitHub | ✅ | ✅ | Optional `GITHUB_TOKEN` for higher rate limits |
-| Hugging Face | ✅ | ✅ | Downloads all files from dataset repo |
-| Government Data | ✅ | ✅ | US (Socrata), UK, Canada, EU, **India (data.gov.in)** |
-| Research (Zenodo) | ✅ | ✅ | Academic datasets with DOI |
-| Internet Archive | ✅ | Partial | Large media archives |
-| Google Dataset Search | ✅ | Via source URL | Datacite + OpenAIRE + Harvard Dataverse |
-
-### India Government Data (FIR, crime, census, etc.)
-
-Set **Country → India** and search e.g. `FIR crime data`, `NCRB`, `census India`.
-
-For best results, register a free API key at [data.gov.in](https://data.gov.in) and add to config:
-
-```yaml
-api_keys:
-  india_data_api_key: "your_key_here"
-```
-
-Or set environment variable: `DATA_GOV_IN_API_KEY`
+| Source | Search | Download | Auth Required |
+|--------|:------:|:--------:|:-------------:|
+| Kaggle | ✅ | ✅ | Optional (recommended for search) |
+| GitHub | ✅ | ✅ | Optional (higher rate limits) |
+| Hugging Face | ✅ | ✅ | Only for private/gated |
+| Government Data | ✅ | ✅ | Public access mode by default |
+| Research (Zenodo, etc.) | ✅ | ✅ | No |
+| Internet Archive | ✅ | Partial | No |
+| Google Dataset Search | ✅ | Via source URL | No |
 
 ---
 
-## Quick Start
+## Installation
 
-### 1. Install
+### Option 1 — Windows Installer (Recommended)
+
+1. Download [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe)
+2. Run the executable
+3. Start searching — no configuration needed
+
+### Option 2 — Portable ZIP
+
+1. Download [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip)
+2. Extract anywhere
+3. Run `Dataset_Collector.exe`
+
+### Option 3 — Build from Source
 
 ```bash
 git clone https://github.com/brovk2008/Dataset_collector.git
@@ -66,194 +104,120 @@ venv\Scripts\activate        # Windows
 
 pip install -r requirements.txt
 pip install -e .
-```
-
-### 2. Run
-
-```bash
 python run.py
 ```
 
-### 3. Search workflow
+### Build Windows Release Locally
 
-1. **Enter query** — e.g. `medical image dataset`, `FIR data India`, `sticker pack icons`
-2. **Select sources** — check the portals you want
-3. **Set filters** — file types, custom type, country, budget, license
-4. **Start Scan** — results appear ranked by relevance
-5. **Review pages** — use ◀ Prev / Next ▶ (25 per page)
-6. **Double-click** a row for full details and copy links
-7. **Generate Manifest** → **Download Selected**
+```bash
+pip install -r requirements.txt
+python scripts/build_windows.py
+```
+
+Outputs: `dist/Dataset_Collector_Setup.exe` and `dist/Dataset_Collector_Portable.zip`
 
 ---
 
-## Configuration
+## Quick Start
 
-Edit `config/default_config.yaml`:
-
-```yaml
-paths:
-  download_dir: ~/Dataset_Collector/downloads
-  manifest_dir: ~/Dataset_Collector/manifests
-  library_dir: ~/Dataset_Collector/library
-  logs_dir: ~/Dataset_Collector/logs
-
-download:
-  max_concurrent: 4
-  retry_attempts: 3
-  timeout_seconds: 300
-
-api_keys:
-  kaggle_username: ""       # https://www.kaggle.com/settings
-  kaggle_key: ""
-  github_token: ""          # Optional — higher GitHub rate limits
-  huggingface_token: ""     # Optional — private HF datasets
-  india_data_api_key: ""    # https://data.gov.in — India govt data
-```
-
-Environment variables override config values:
-
-| Variable | Service |
-|----------|---------|
-| `KAGGLE_USERNAME` / `KAGGLE_KEY` | Kaggle |
-| `GITHUB_TOKEN` | GitHub |
-| `HF_TOKEN` | Hugging Face |
-| `DATA_GOV_IN_API_KEY` | India data.gov.in |
+1. **Launch** Dataset_Collector
+2. **Enter a query** — e.g. `medical images`, `sentiment analysis`, `crime statistics`
+3. **Select sources** and file types (or leave defaults)
+4. **Click Scan Sources** — results are ranked by relevance and quality
+5. **Select datasets** (or use size-budget auto-select)
+6. **Generate Manifest** (optional) then **Download Selected**
+7. **View profiles** in Analysis tab — reports saved in each dataset folder
+8. **Manage downloads** in the Library tab
 
 ---
 
-## Filters Guide
+## Authentication Guide
 
-### File Types
-Check standard types (CSV, Images, Audio, ZIP, etc.) or leave **Any** checked.
+All authentication is **optional**. The app works out of the box for public datasets.
 
-### Custom Type
-Type comma-separated keywords for anything not in the list:
-```
-stickers, icons pack, FIR records, emoji, subtitles
-```
-Matches dataset name, description, and file extensions.
+| Provider | When Needed | How to Connect |
+|----------|-------------|----------------|
+| **Kaggle** | Reliable search & authenticated downloads | Settings → Username + API Key → Test Connection |
+| **GitHub** | Higher API rate limits | Settings → Personal Access Token |
+| **Hugging Face** | Private or gated datasets only | Settings → HF Token |
+| **India data.gov.in** | Enhanced catalog access | Settings → API Key (public mode works without it) |
 
-### Total Budget
-- Set to **Maximum Size**
-- Enter amount + choose **MB** or **GB**
-- After scan, the app auto-selects the highest-relevance datasets that fit within your total budget
+Credentials are encrypted locally at `~/.dataset_collector/credentials.enc` and never logged or exposed.
 
 ---
 
 ## Architecture
 
 ```
-src/dataset_collector/
-├── core/           # Models, enums, configuration
-├── search/
-│   ├── connectors/ # Plugin-based source connectors
-│   ├── relevance.py
-│   └── search_engine.py
-├── download/       # Multi-threaded download engine
-├── manifest/       # JSON + TXT manifest generator
-├── analyzer/       # Dataset profiling (CSV, images, text)
-├── storage/        # Library index + disk tracking
-├── logging/        # Structured JSONL logs
-└── ui/             # PySide6 desktop interface
+Dataset_collector/
+├── run.py                          # Launcher
+├── build.spec                      # PyInstaller build config
+├── scripts/build_windows.py        # Windows release builder
+├── .github/workflows/release.yml   # Auto-build on release tags
+├── config/default_config.yaml      # User-overridable settings
+└── src/dataset_collector/
+    ├── core/           Models, config, encrypted credential store
+    ├── search/
+    │   ├── connectors/ Plugin-style source connectors
+    │   ├── relevance.py  Ranking (0–100)
+    │   ├── quality.py    Quality scoring (0–10)
+    │   └── dedup.py      Cross-source duplicate merging
+    ├── download/       Queue engine with pause/resume/cancel
+    ├── manifest/       JSON + TXT manifest generation
+    ├── analyzer/       CSV, image, text profiling
+    ├── storage/        Local library index
+    ├── logging/        Structured app logs
+    └── ui/             PySide6 desktop interface
 ```
 
-Each source connector implements `BaseConnector`. Register custom connectors:
+### Plugin System
 
-```python
-from dataset_collector.search.search_engine import SearchEngine
-from dataset_collector.core.enums import DataSource
-
-engine.register_connector(DataSource.KAGGLE, MyCustomKaggleConnector())
-```
+Each data source implements `BaseConnector` with `search()` and optional `get_download_urls()`. Register custom connectors via `SearchEngine.register_connector()`.
 
 ---
 
-## Download Locations
+## Roadmap
 
-Created automatically on first launch:
-
-| Path | Contents |
-|------|----------|
-| `~/Dataset_Collector/downloads/` | Downloaded dataset files |
-| `~/Dataset_Collector/manifests/` | Generated manifest files |
-| `~/Dataset_Collector/library/` | Library index (JSON) |
-| `~/Dataset_Collector/logs/` | Application logs |
-
----
-
-## Logs
-
-Structured logs in `~/Dataset_Collector/logs/`:
-
-- `app.log` — general log
-- `search.jsonl` — search events
-- `download.jsonl` — download events
-- `error.jsonl` — errors
-- `analysis.jsonl` — profiling results
-- `manifest.jsonl` — manifest generation
-
----
-
-## Building a Standalone Executable
-
-```bash
-pip install pyinstaller
-pyinstaller --name Dataset_Collector --windowed run.py
-```
-
-See [docs/build.md](docs/build.md) for full instructions.
-
----
-
-## Example Manifest
-
-```json
-[
-  {
-    "dataset_name": "Medical MNIST",
-    "source": "Kaggle",
-    "url": "https://www.kaggle.com/datasets/andrewmvd/medical-mnist",
-    "size": "2.4 GB",
-    "files": ["images.zip", "labels.csv"],
-    "license": "MIT",
-    "timestamp": "2026-06-09T12:00:00+00:00"
-  }
-]
-```
-
-See [examples/manifest_example.json](examples/manifest_example.json).
-
----
-
-## Troubleshooting
-
-| Issue | Solution |
-|-------|----------|
-| Kaggle returns 0 results | Add API keys to config; Kaggle blocks unauthenticated scraping intermittently |
-| India govt data empty | Add `india_data_api_key`; set Country → India |
-| Download fails | Check URL in dataset detail dialog; retry with Retry Failed |
-| Slow search | Uncheck unused sources; reduce max results in config |
+- AI dataset recommendations
+- Dataset quality scoring improvements
+- Cloud storage export (S3, GCS)
+- Dataset version tracking
+- Dataset merging utilities
+- Dataset similarity search
 
 ---
 
 ## Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Implement your connector in `src/dataset_collector/search/connectors/`
-4. Register it in `search_engine.py`
-5. Open a pull request
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes
+4. Push and open a Pull Request
+
+Bug reports and feature requests are welcome via [GitHub Issues](https://github.com/brovk2008/Dataset_collector/issues).
+
+---
+
+## Donate
+
+If Dataset_Collector saves you time, consider supporting development:
+
+[![Donate via Razorpay](https://img.shields.io/badge/Donate-Razorpay-0C2451?style=for-the-badge&logo=razorpay&logoColor=white)](https://brovk2008.github.io/Dataset_collector/docs/donate.html)
+
+> GitHub README cannot render payment scripts. Use the button above, or open [docs/donate.html](docs/donate.html) locally / via [GitHub Pages](https://brovk2008.github.io/Dataset_collector/docs/donate.html).
+
+```html
+<form>
+  <script
+    src="https://checkout.razorpay.com/v1/payment-button.js"
+    data-payment_button_id="pl_SzYh0ZoqCkMUh2"
+    async>
+  </script>
+</form>
+```
 
 ---
 
 ## License
 
-MIT — see LICENSE file.
-
----
-
-## Links
-
-- Repository: [github.com/brovk2008/Dataset_collector](https://github.com/brovk2008/Dataset_collector)
-- India Open Data: [data.gov.in](https://data.gov.in)
-- Kaggle API: [kaggle.com/docs/api](https://www.kaggle.com/docs/api)
+MIT License — see [LICENSE](LICENSE) for details.
