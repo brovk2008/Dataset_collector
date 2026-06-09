@@ -38,6 +38,19 @@ class DatasetDetailDialog(QDialog):
     form.addRow("Quality:", QLabel(f"{ds.quality_score}/10"))
     form.addRow("Available Sources:", QLabel(sources))
     form.addRow("Primary Source:", QLabel(ds.source.value))
+    if ds.metadata.get("content_type") == "paper":
+      authors = ds.metadata.get("authors") or []
+      if authors:
+        form.addRow("Authors:", QLabel(", ".join(authors[:8]) + ("..." if len(authors) > 8 else "")))
+      doi = ds.metadata.get("doi")
+      if doi:
+        form.addRow("DOI:", QLabel(doi))
+      provider = ds.metadata.get("provider")
+      if provider:
+        form.addRow("Provider:", QLabel(provider))
+      citations = ds.metadata.get("citation_count")
+      if citations:
+        form.addRow("Citations:", QLabel(str(citations)))
     form.addRow("Size:", QLabel(ds.size_display))
     form.addRow("Files:", QLabel(str(ds.file_count) if ds.file_count else "—"))
     form.addRow("License:", QLabel(ds.license_info))

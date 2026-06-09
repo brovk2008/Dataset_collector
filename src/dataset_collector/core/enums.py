@@ -9,6 +9,7 @@ class DataSource(str, Enum):
     HUGGINGFACE = "HuggingFace"
     GOVERNMENT = "Government Data"
     RESEARCH = "Research Sources"
+    RESEARCH_PAPERS = "Research Papers"
     INTERNET_ARCHIVE = "Internet Archive"
     GOOGLE_DATASET = "Google Dataset Search"
 
@@ -23,6 +24,7 @@ class FileType(str, Enum):
     ZIP = "ZIP"
     TAR = "TAR"
     PARQUET = "Parquet"
+    PDF = "PDF"
     ANY = "Any"
 
 

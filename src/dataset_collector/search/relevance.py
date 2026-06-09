@@ -16,6 +16,7 @@ SOURCE_WEIGHT = {
   "GitHub": 0.85,
   "Government Data": 0.9,
   "Research Sources": 0.92,
+  "Research Papers": 0.95,
   "Google Dataset Search": 0.88,
   "Internet Archive": 0.75,
 }

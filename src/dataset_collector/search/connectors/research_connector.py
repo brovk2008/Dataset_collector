@@ -58,6 +58,11 @@ class ResearchConnector(BaseConnector):
 
           files_meta = record.get("files", [])
           files = [f.get("key", "") for f in files_meta]
+          download_urls = [
+            f.get("links", {}).get("self", "")
+            for f in files_meta
+            if f.get("links", {}).get("self")
+          ]
           total_size = sum(f.get("size", 0) for f in files_meta)
           if not self._matches_size(total_size or None, filters):
             continue
@@ -81,7 +86,13 @@ class ResearchConnector(BaseConnector):
               last_updated=updated,
               description=metadata.get("description", "")[:500] if metadata.get("description") else "",
               files=files,
-              metadata={"zenodo_id": record_id, "doi": metadata.get("doi", "")},
+              download_urls=download_urls,
+              metadata={
+                "zenodo_id": record_id,
+                "doi": metadata.get("doi", ""),
+                "content_type": "dataset",
+                "provider": "Zenodo",
+              },
             )
           )
     except Exception:

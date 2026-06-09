@@ -8,9 +8,9 @@
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
 [![Release](https://img.shields.io/github/v/release/brovk2008/Dataset_collector?label=release)](https://github.com/brovk2008/Dataset_collector/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/brovk2008/Dataset_collector/total)](https://github.com/brovk2008/Dataset_collector/releases)
-[![Platform](https://img.shields.io/badge/platform-Windows-lightgrey)](https://github.com/brovk2008/Dataset_collector/releases)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/brovk2008/Dataset_collector/releases)
 
-No Python installation required for Windows releases.
+No Python installation required — download a release for your platform.
 
 </div>
 
@@ -18,13 +18,15 @@ No Python installation required for Windows releases.
 
 ## Download Latest Release
 
-| | |
-|---|---|
+| Platform | Download |
+|----------|----------|
 | **Windows Installer** | [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe) |
-| **Portable Version** | [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip) |
+| **Windows Portable** | [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip) |
+| **macOS** | [Dataset_Collector-macOS.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-macOS.zip) |
+| **Linux** | [Dataset_Collector-Linux.tar.gz](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-Linux.tar.gz) |
 | **Source Code** | [GitHub Repository](https://github.com/brovk2008/Dataset_collector) |
 
-> **First release?** Create a tag (e.g. `v1.0.0`) and GitHub Actions will automatically build and attach the Windows EXE and portable ZIP.
+> Create a tag (e.g. `v1.1.0`) and GitHub Actions builds Windows, macOS, and Linux release assets automatically.
 
 **Support the project:** [Donate via Razorpay](https://rzp.io/rzp/ABzyauZu)
 
@@ -50,7 +52,9 @@ No Python installation required for Windows releases.
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-source search** | Kaggle, GitHub, Hugging Face, Government portals, Research repos, Internet Archive, Google Dataset Search |
+| **Multi-source search** | Kaggle, GitHub, Hugging Face, Government portals, Research repos, **Research Papers**, Internet Archive, Google Dataset Search |
+| **Research paper downloads** | arXiv, OpenAlex, and Zenodo publications — PDF + metadata saved locally |
+| **Researcher presets** | One-click presets for academic dataset and paper searches |
 | **Intelligent ranking** | Composite relevance score (0–100) based on query match, popularity, recency, and credibility |
 | **Quality scoring** | Per-dataset quality metric (0–10) for documentation, metadata, and availability |
 | **Duplicate detection** | Merges the same dataset found across multiple sources into one entry |
@@ -72,7 +76,8 @@ No Python installation required for Windows releases.
 | GitHub | ✅ | ✅ | Optional (higher rate limits) |
 | Hugging Face | ✅ | ✅ | Only for private/gated |
 | Government Data | ✅ | ✅ | Public access mode by default |
-| Research (Zenodo, etc.) | ✅ | ✅ | No |
+| Research Datasets (Zenodo) | ✅ | ✅ | No |
+| Research Papers (arXiv, OpenAlex) | ✅ | ✅ PDF | No |
 | Internet Archive | ✅ | Partial | No |
 | Google Dataset Search | ✅ | Via source URL | No |
 
@@ -80,19 +85,24 @@ No Python installation required for Windows releases.
 
 ## Installation
 
-### Option 1 — Windows Installer (Recommended)
+### Windows
 
-1. Download [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe)
-2. Run the executable
-3. Start searching — no configuration needed
+1. **Installer:** [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Setup.exe) — run and launch
+2. **Portable:** [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip) — extract and run `Dataset_Collector.exe`
 
-### Option 2 — Portable ZIP
+### macOS
 
-1. Download [Dataset_Collector_Portable.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector_Portable.zip)
-2. Extract anywhere
-3. Run `Dataset_Collector.exe`
+1. Download [Dataset_Collector-macOS.zip](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-macOS.zip)
+2. Extract and open `Dataset_Collector.app`
+3. If macOS blocks the app: right-click → **Open** → confirm (unsigned build)
 
-### Option 3 — Build from Source
+### Linux
+
+1. Download [Dataset_Collector-Linux.tar.gz](https://github.com/brovk2008/Dataset_collector/releases/latest/download/Dataset_Collector-Linux.tar.gz)
+2. Extract: `tar -xzf Dataset_Collector-Linux.tar.gz`
+3. Run: `chmod +x Dataset_Collector && ./Dataset_Collector`
+
+### Build from Source (all platforms)
 
 ```bash
 git clone https://github.com/brovk2008/Dataset_collector.git
@@ -107,27 +117,44 @@ pip install -e .
 python run.py
 ```
 
-### Build Windows Release Locally
+### Build Release Locally
 
 ```bash
 pip install -r requirements.txt
-python scripts/build_windows.py
+python scripts/build_release.py   # auto-detects Windows / macOS / Linux
 ```
-
-Outputs: `dist/Dataset_Collector_Setup.exe` and `dist/Dataset_Collector_Portable.zip`
 
 ---
 
 ## Quick Start
 
 1. **Launch** Dataset_Collector
-2. **Enter a query** — e.g. `medical images`, `sentiment analysis`, `crime statistics`
-3. **Select sources** and file types (or leave defaults)
-4. **Click Scan Sources** — results are ranked by relevance and quality
-5. **Select datasets** (or use size-budget auto-select)
-6. **Generate Manifest** (optional) then **Download Selected**
-7. **View profiles** in Analysis tab — reports saved in each dataset folder
-8. **Manage downloads** in the Library tab
+2. **Enter a query** — e.g. `medical images`, `transformer architecture`, `climate dataset`
+3. **Select sources** or click **Researcher Preset** / **Papers Only**
+4. **Click Start Scan** — results ranked by relevance and quality
+5. **Select items** (datasets or papers) and **Download Selected**
+6. **Papers** save as PDF + `paper_metadata.json` (authors, DOI, abstract)
+7. **Datasets** auto-profile in the Analysis tab; manage all downloads in Library
+
+---
+
+## For Researchers
+
+Dataset_Collector is built for academic and applied research workflows:
+
+| Workflow | How |
+|----------|-----|
+| **Find datasets** | Enable *Research Sources*, *Government Data*, *Hugging Face* — or use **Researcher Preset** |
+| **Find papers** | Enable *Research Papers* or click **Papers Only** |
+| **Download papers** | Select results → Download — PDFs from arXiv, OpenAlex, Zenodo |
+| **Literature + data** | Search both datasets and papers in one scan |
+| **Reproducibility** | Manifests, metadata JSON, and analysis reports saved locally |
+
+**Paper sources:** arXiv (preprints), OpenAlex (open-access works), Zenodo (publications with PDFs).
+
+**Dataset sources:** Zenodo research data, government open data, Hugging Face, GitHub, and more.
+
+No API keys required for public research content.
 
 ---
 
@@ -152,7 +179,7 @@ Credentials are encrypted locally at `~/.dataset_collector/credentials.enc` and 
 Dataset_collector/
 ├── run.py                          # Launcher
 ├── build.spec                      # PyInstaller build config
-├── scripts/build_windows.py        # Windows release builder
+├── scripts/build_release.py        # Cross-platform release builder
 ├── .github/workflows/release.yml   # Auto-build on release tags
 ├── config/default_config.yaml      # User-overridable settings
 └── src/dataset_collector/

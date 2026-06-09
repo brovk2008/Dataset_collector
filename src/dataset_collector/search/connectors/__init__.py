@@ -8,6 +8,7 @@ from dataset_collector.search.connectors.huggingface_connector import HuggingFac
 from dataset_collector.search.connectors.internet_archive_connector import InternetArchiveConnector
 from dataset_collector.search.connectors.kaggle_connector import KaggleConnector
 from dataset_collector.search.connectors.research_connector import ResearchConnector
+from dataset_collector.search.connectors.research_papers_connector import ResearchPapersConnector
 
 __all__ = [
     "BaseConnector",
@@ -18,4 +19,5 @@ __all__ = [
     "InternetArchiveConnector",
     "KaggleConnector",
     "ResearchConnector",
+    "ResearchPapersConnector",
 ]

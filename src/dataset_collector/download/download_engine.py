@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import time
 from pathlib import Path
 from typing import Callable
@@ -120,7 +121,9 @@ class DownloadEngine:
       try:
         await self._wait_if_paused()
 
-        if dataset.source == DataSource.KAGGLE:
+        if dataset.metadata.get("content_type") == "paper" or dataset.source == DataSource.RESEARCH_PAPERS:
+          await self._download_research_paper(dataset, task, dest_dir, progress_callback)
+        elif dataset.source == DataSource.KAGGLE:
           await self._download_kaggle(dataset, task, dest_dir, progress_callback)
         elif dataset.source == DataSource.HUGGINGFACE:
           await self._download_huggingface(dataset, task, dest_dir, progress_callback)
@@ -150,6 +153,53 @@ class DownloadEngine:
         self._logger.log_download(dataset.name, "failed", error=err)
         self._logger.error(f"Download failed: {dataset.name}", error=err)
 
+      if progress_callback:
+        progress_callback(task)
+
+  async def _download_research_paper(
+    self,
+    dataset: DatasetResult,
+    task: DownloadTask,
+    dest_dir: Path,
+    progress_callback: Callable[[DownloadTask], None] | None,
+  ) -> None:
+    urls = [u for u in dataset.download_urls if u.startswith("http")]
+    if not urls and dataset.metadata.get("arxiv_id"):
+      urls = [f"https://arxiv.org/pdf/{dataset.metadata['arxiv_id']}.pdf"]
+
+    meta = {
+      "title": dataset.name,
+      "source": dataset.source.value,
+      "url": dataset.url,
+      "license": dataset.license_info,
+      "authors": dataset.metadata.get("authors", []),
+      "doi": dataset.metadata.get("doi", ""),
+      "abstract": dataset.metadata.get("abstract", dataset.description),
+      "provider": dataset.metadata.get("provider", ""),
+      "arxiv_id": dataset.metadata.get("arxiv_id", ""),
+    }
+    (dest_dir / "paper_metadata.json").write_text(
+      json.dumps(meta, indent=2, ensure_ascii=False),
+      encoding="utf-8",
+    )
+
+    if not urls:
+      raise ValueError("No downloadable PDF found for this paper")
+
+    total = len(urls)
+    for i, url in enumerate(urls):
+      if self._cancelled:
+        task.status = DownloadStatus.CANCELLED
+        return
+      filename = Path(urlparse(url).path).name or f"paper_{i + 1}.pdf"
+      if not filename.lower().endswith(".pdf"):
+        filename = f"{_sanitize_filename(dataset.name)}.pdf"
+      try:
+        await self._download_url(url, task, dest_dir / filename, progress_callback, extra_headers=BROWSER_HEADERS)
+        task.downloaded_files += 1
+      except Exception:
+        task.failed_files += 1
+      task.progress_percent = (i + 1) / total * 100
       if progress_callback:
         progress_callback(task)
 

@@ -51,6 +51,7 @@ class BaseConnector(abc.ABC):
       FileType.ZIP: {"zip"},
       FileType.TAR: {"tar", "gz", "tgz", "bz2"},
       FileType.PARQUET: {"parquet"},
+      FileType.PDF: {"pdf"},
     }
     allowed: set[str] = set()
     for ft in filters.file_types:

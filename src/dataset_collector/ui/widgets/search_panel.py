@@ -45,16 +45,17 @@ class SearchPanel(QWidget):
     layout.setSpacing(10)
 
     # Query — multi-line so long queries are fully visible
-    query_group = QGroupBox("Dataset Query")
+    query_group = QGroupBox("Search Query")
     query_layout = QVBoxLayout(query_group)
     query_layout.setContentsMargins(10, 14, 10, 10)
     self._query_input = QTextEdit()
     self._query_input.setPlaceholderText(
-      "Enter your search topic...\n\n"
+      "Search datasets or research papers...\n\n"
       "Examples:\n"
       "• medical image dataset\n"
-      "• FIR crime data India\n"
-      "• sticker pack icons"
+      "• transformer attention mechanism\n"
+      "• climate change satellite data\n"
+      "• systematic review machine learning"
     )
     self._query_input.setMinimumHeight(90)
     self._query_input.setMaximumHeight(120)
@@ -75,6 +76,19 @@ class SearchPanel(QWidget):
     self._search_all.setChecked(True)
     self._search_all.toggled.connect(self._on_search_all_toggled)
     sources_layout.addWidget(self._search_all)
+    preset_row = QHBoxLayout()
+    researcher_btn = QPushButton("Researcher Preset")
+    researcher_btn.setToolTip(
+      "Select research datasets, papers, government data, and Hugging Face with research license filter"
+    )
+    researcher_btn.clicked.connect(self._apply_researcher_preset)
+    preset_row.addWidget(researcher_btn)
+    papers_only_btn = QPushButton("Papers Only")
+    papers_only_btn.setToolTip("Search only open-access research papers (arXiv, OpenAlex, Zenodo)")
+    papers_only_btn.clicked.connect(self._apply_papers_only_preset)
+    preset_row.addWidget(papers_only_btn)
+    preset_row.addStretch()
+    sources_layout.addLayout(preset_row)
     layout.addWidget(sources_group)
 
     # Filters
@@ -168,6 +182,29 @@ class SearchPanel(QWidget):
   def _on_search_all_toggled(self, checked: bool) -> None:
     for cb in self._source_checks.values():
       cb.setChecked(checked)
+
+  def _apply_researcher_preset(self) -> None:
+    self._search_all.setChecked(False)
+    research_sources = {
+      DataSource.RESEARCH,
+      DataSource.RESEARCH_PAPERS,
+      DataSource.GOOGLE_DATASET,
+      DataSource.HUGGINGFACE,
+      DataSource.GOVERNMENT,
+      DataSource.GITHUB,
+    }
+    for source, cb in self._source_checks.items():
+      cb.setChecked(source in research_sources)
+    self._license_combo.setCurrentText(LicenseFilter.RESEARCH_ONLY.value)
+
+  def _apply_papers_only_preset(self) -> None:
+    self._search_all.setChecked(False)
+    for source, cb in self._source_checks.items():
+      cb.setChecked(source == DataSource.RESEARCH_PAPERS)
+    pdf_cb = self._file_type_checks.get(FileType.PDF)
+    if pdf_cb:
+      self._any_type.setChecked(False)
+      pdf_cb.setChecked(True)
 
   def _on_any_type_toggled(self, checked: bool) -> None:
     if checked:

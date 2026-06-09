@@ -18,6 +18,7 @@ from dataset_collector.search.connectors import (
     InternetArchiveConnector,
     KaggleConnector,
     ResearchConnector,
+    ResearchPapersConnector,
 )
 from dataset_collector.core.credential_store import CredentialStore
 from dataset_collector.search.dedup import merge_duplicates
@@ -60,6 +61,7 @@ class SearchEngine:
         india_api_key=self._resolve("india_data_api_key"),
       ),
       DataSource.RESEARCH: ResearchConnector(),
+      DataSource.RESEARCH_PAPERS: ResearchPapersConnector(),
       DataSource.INTERNET_ARCHIVE: InternetArchiveConnector(),
       DataSource.GOOGLE_DATASET: GoogleDatasetConnector(),
     }
