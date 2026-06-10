@@ -5,8 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Callable
 
-from sentence_transformers import SentenceTransformer
-
 from dataset_collector.core.config_manager import ConfigManager
 from dataset_collector.logging.logger import AppLogger
 
@@ -29,7 +27,7 @@ class ModelManager:
     self._cache_dir = Path.home() / ".dataset_collector" / "cache"
     self._cache_dir.mkdir(parents=True, exist_ok=True)
     self._model_path = self._cache_dir / "sentence-transformers" / self.MODEL_NAME
-    self._model_instance: SentenceTransformer | None = None
+    self._model_instance = None
 
     if download_on_init and not self.is_installed():
       self.download_model()
@@ -63,6 +61,8 @@ class ModelManager:
   ) -> bool:
     """Download model from Hugging Face."""
     try:
+      from sentence_transformers import SentenceTransformer
+
       if progress_callback:
         progress_callback("Downloading model...", 10.0)
 
@@ -85,13 +85,15 @@ class ModelManager:
       )
       return False
 
-  def get_encoder(self) -> SentenceTransformer:
+  def get_encoder(self):
     """Get or load model encoder instance."""
     if self._model_instance is None:
       if not self.is_installed():
         raise RuntimeError(
           "Model not installed. Call download_model() first or enable automatic download."
         )
+      from sentence_transformers import SentenceTransformer
+
       self._model_instance = SentenceTransformer(
         self.MODEL_NAME,
         cache_folder=str(self._cache_dir),
