@@ -14,6 +14,7 @@ class DataSource(str, Enum):
     GOOGLE_DATASET = "Google Dataset Search"
     ARXIV = "arXiv"
     BIORXIV = "bioRxiv/medRxiv"
+    DATAVERSE = "Harvard Dataverse"
 
 
 class FileType(str, Enum):

@@ -13,6 +13,7 @@ from dataset_collector.search.connectors import (
     ArxivConnector,
     BaseConnector,
     BiorxivConnector,
+    DataverseConnector,
     GitHubConnector,
     GoogleDatasetConnector,
     GovernmentConnector,
@@ -70,6 +71,7 @@ class SearchEngine:
       DataSource.GOOGLE_DATASET: GoogleDatasetConnector(),
       DataSource.ARXIV: ArxivConnector(),
       DataSource.BIORXIV: BiorxivConnector(),
+      DataSource.DATAVERSE: DataverseConnector(),
     }
 
   def register_connector(self, source: DataSource, connector: BaseConnector) -> None:
