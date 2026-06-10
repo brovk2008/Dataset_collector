@@ -12,7 +12,8 @@ from dataset_collector.download.download_engine import DownloadEngine
 
 class SearchWorker(QThread):
   progress = Signal(str, float)
-  result_received = Signal(object)  # NEW: Stream results as they arrive
+  result_received = Signal(object)  # result
+  source_progress = Signal(str, int)  # source_name, count_from_source
   finished = Signal(list)
   error = Signal(str)
 
@@ -21,6 +22,7 @@ class SearchWorker(QThread):
     self._engine = search_engine
     self._request = request
     self._all_results: list[DatasetResult] = []
+    self._source_counts: dict[str, int] = {}  # Track results per source
     self._cancelled = False
 
   def cancel(self) -> None:
@@ -68,12 +70,21 @@ class SearchWorker(QThread):
       if not self._cancelled:
         self.error.emit(str(e))
 
-  def _on_result_received(self, result) -> None:
+  def _on_result_received(self, result: DatasetResult) -> None:
     """Called when a single result arrives from any source."""
     if self._cancelled:
       return
     self._all_results.append(result)
+
+    # Track results per source
+    source_name = result.source.value
+    if source_name not in self._source_counts:
+      self._source_counts[source_name] = 0
+    self._source_counts[source_name] += 1
+
+    # Emit both the result and source progress
     self.result_received.emit(result)
+    self.source_progress.emit(source_name, self._source_counts[source_name])
 
 
 class DownloadWorker(QThread):

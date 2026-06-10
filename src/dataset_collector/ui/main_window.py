@@ -223,8 +223,15 @@ class MainWindow(QMainWindow):
     self._scan_status.setObjectName("secondaryLabel")
     self._scan_status.setVisible(False)
 
+    # Source tracking display
+    self._source_status = QLabel("")
+    self._source_status.setObjectName("secondaryLabel")
+    self._source_status.setVisible(False)
+    self._source_counts: dict[str, int] = {}
+
     right_layout.addWidget(self._scan_status)
     right_layout.addWidget(self._scan_progress)
+    right_layout.addWidget(self._source_status)
 
     self._results_table = ResultsTable()
     right_layout.addWidget(self._results_table, stretch=1)
@@ -321,8 +328,11 @@ class MainWindow(QMainWindow):
     self._search_panel.set_scanning(True)
     self._scan_progress.setVisible(True)
     self._scan_status.setVisible(True)
+    self._source_status.setVisible(True)
     self._scan_progress.setValue(0)
     self._scan_status.setText("Searching sources...")
+    self._source_status.setText("")
+    self._source_counts = {}  # Reset source counts
     self._status_bar.showMessage("Scanning...")
     self._results_table.set_results([])  # Clear old results for new search
 
@@ -339,10 +349,22 @@ class MainWindow(QMainWindow):
 
     self._search_worker = SearchWorker(self._search_engine, request)
     self._search_worker.progress.connect(self._on_scan_progress)
-    self._search_worker.result_received.connect(self._on_result_received)  # NEW: Stream results
+    self._search_worker.result_received.connect(self._on_result_received)
+    self._search_worker.source_progress.connect(self._on_source_progress)  # NEW
     self._search_worker.finished.connect(self._on_scan_finished)
     self._search_worker.error.connect(self._on_scan_error)
     self._search_worker.start()
+
+  def _on_source_progress(self, source_name: str, count: int) -> None:
+    """Update source tracking display."""
+    self._source_counts[source_name] = count
+
+    # Build source status string
+    status_lines = ["Sources found:"]
+    for source, count in sorted(self._source_counts.items()):
+      status_lines.append(f"  {source}: {count} datasets")
+
+    self._source_status.setText("\n".join(status_lines))
 
   def _on_cancel_scan(self) -> None:
     if self._search_worker and self._search_worker.isRunning():
@@ -350,6 +372,7 @@ class MainWindow(QMainWindow):
       self._search_panel.set_scanning(False)
       self._scan_progress.setVisible(False)
       self._scan_status.setText("Search cancelled")
+      self._source_status.setVisible(False)
       self._status_bar.showMessage("Search cancelled")
 
   def _on_scan_progress(self, message: str, percent: float) -> None:
@@ -378,6 +401,7 @@ class MainWindow(QMainWindow):
     self._results_table.set_results(results)
     self._search_panel.set_scanning(False)
     self._scan_progress.setVisible(False)
+    self._source_status.setVisible(False)
     self._scan_status.setText(f"Scan complete: {len(results)} relevant datasets found")
     self._status_bar.showMessage(f"Found {len(results)} datasets")
 
