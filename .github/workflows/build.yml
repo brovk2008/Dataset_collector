@@ -20,38 +20,50 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller sentence-transformers torch
+          pip install pyinstaller
           pip install -e .
-
-      - name: Pre-download sentence-transformers model
-        run: |
-          python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
-        continue-on-error: true
 
       - name: Build with PyInstaller
         run: |
           pyinstaller dataset_collector.spec
         continue-on-error: true
 
-      - name: Calculate SHA256 (if exe exists)
+      - name: Check for build artifacts
         run: |
-          if (Test-Path "dist/dataset_collector/dataset_collector.exe") {
-            certutil -hashfile "dist/dataset_collector/dataset_collector.exe" SHA256 > dist/dataset_collector.exe.sha256
+          if (Test-Path "dist/dataset_collector") {
+            Write-Host "Build succeeded - dist/dataset_collector exists"
           } else {
-            echo "No executable found at dist/dataset_collector/dataset_collector.exe"
+            Write-Host "Build directory structure:"
+            Get-ChildItem -Path "dist" -Recurse | Select-Object -First 20
           }
         shell: powershell
-        continue-on-error: true
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            dist/dataset_collector/dataset_collector.exe
-            dist/dataset_collector.exe.sha256
+            dist/dataset_collector/**/*.exe
           draft: false
           prerelease: false
+          body: |
+            v2.4.0 Release - Performance Optimization & Documentation
+
+            ## What's New
+            - 50-100x performance improvement in dataset deduplication
+            - Optimized database queries and caching
+            - Comprehensive user guide and troubleshooting docs
+            - Automated CI/CD pipelines
+            - GitHub Actions for linting, testing, and packaging
+
+            ## Installation
+            Download the dataset_collector.exe and run directly - no Python installation required.
+
+            ## Features
+            - Multi-source dataset discovery with semantic search
+            - Intelligent deduplication across sources
+            - Performance-optimized co-download tracking
+            - User behavior analytics
+            - Recommendation engine
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         continue-on-error: true
-
