@@ -191,8 +191,9 @@ class LibraryPanel(QWidget):
 
 
 def _format_bytes(size: int) -> str:
+  size_float = float(size)
   for unit in ("B", "KB", "MB", "GB", "TB"):
-    if size < 1024:
-      return f"{size:.1f} {unit}" if unit != "B" else f"{size} B"
-    size /= 1024
-  return f"{size:.1f} PB"
+    if size_float < 1024:
+      return f"{size_float:.1f} {unit}" if unit != "B" else f"{int(size_float)} B"
+    size_float /= 1024
+  return f"{size_float:.1f} PB"

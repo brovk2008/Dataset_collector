@@ -20,7 +20,7 @@ class SearchWorker(QThread):
     super().__init__()
     self._engine = search_engine
     self._request = request
-    self._all_results = []
+    self._all_results: list[DatasetResult] = []
     self._cancelled = False
 
   def cancel(self) -> None:

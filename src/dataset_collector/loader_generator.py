@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
+from typing import Literal, cast
 
 
 class LoaderGenerator:
@@ -47,13 +47,13 @@ class LoaderGenerator:
           json_count += 1
 
     # Determine dominant type
-    totals = {
+    totals: dict[Literal["csv", "images", "json"], int] = {
       "csv": csv_count,
       "images": image_count,
       "json": json_count,
     }
 
-    max_type = max(totals, key=totals.get)
+    max_type = max(totals, key=lambda k: totals[k])
     max_count = totals[max_type]
 
     if max_count == 0:
@@ -64,7 +64,7 @@ class LoaderGenerator:
     if non_zero_types > 1 and max_count < file_count * 0.8:
       return "mixed"
 
-    return max_type
+    return cast(Literal["csv", "images", "json", "mixed", "unknown"], max_type)
 
   @staticmethod
   def generate_loader_code(directory: Path) -> str:

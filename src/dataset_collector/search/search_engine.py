@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
+from typing import Callable, cast
 
 from dataset_collector.core.config_manager import ConfigManager
 from dataset_collector.core.enums import DataSource
@@ -134,7 +134,7 @@ class SearchEngine:
       if isinstance(result, Exception):
         continue
       if result:
-        all_results.extend(result)
+        all_results.extend(cast(list[DatasetResult], result))
 
     # Merge cross-source duplicates, then score and rank
     merged = merge_duplicates(all_results)

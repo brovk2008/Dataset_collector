@@ -79,7 +79,7 @@ class SimilarDatasetsEngine:
   ) -> dict[str, list[DatasetResult]]:
     """Batch query for similar datasets (load embeddings once)."""
     try:
-      results = {}
+      results: dict[str, list[DatasetResult]] = {}
 
       # Load all embeddings once (not per dataset)
       all_ids = [d.id for d in all_datasets]

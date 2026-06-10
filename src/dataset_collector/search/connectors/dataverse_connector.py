@@ -56,7 +56,7 @@ class DataverseConnector(BaseConnector):
   async def _fetch_datasets(self, query: str, limit: int) -> list[DatasetResult]:
     """Fetch datasets from Harvard Dataverse API."""
     try:
-      params = {
+      params: dict[str, str | int] = {
         "q": query,
         "type": "dataset",
         "per_page": min(limit, 100),
@@ -127,16 +127,15 @@ class DataverseConnector(BaseConnector):
         description=description,
         source=DataSource.DATAVERSE,
         url=dataverse_url,
-        size_display=self._format_size(estimated_size),
         estimated_size_bytes=estimated_size,
         license_info=license_info,
         last_updated=published_dt,
         rank_score=76,
-        quality_score=8,  # Harvard curated = higher quality
-        health_score=85,  # Harvard curated = more reliable
+        quality_score=8.0,
+        health_score=85,
         available_sources=[DataSource.DATAVERSE.value],
         requires_auth=False,
-        auth_message=None,
+        auth_message="",
         metadata={
           "doi": doi,
           "entity_id": entity_id,
@@ -153,11 +152,12 @@ class DataverseConnector(BaseConnector):
 
   def _format_size(self, size_bytes: int) -> str:
     """Format bytes to human readable size."""
+    size = float(size_bytes)
     for unit in ("B", "KB", "MB", "GB"):
-      if size_bytes < 1024:
-        return f"{size_bytes:.1f} {unit}" if unit != "B" else f"{size_bytes} B"
-      size_bytes /= 1024
-    return f"{size_bytes:.1f} TB"
+      if size < 1024:
+        return f"{size:.1f} {unit}" if unit != "B" else f"{int(size)} B"
+      size /= 1024
+    return f"{size:.1f} TB"
 
   async def get_download_urls(self, dataset: DatasetResult) -> list[str]:
     """Return download URL for Dataverse dataset."""

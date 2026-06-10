@@ -20,7 +20,7 @@ class HealthScorer:
 
   def compute_health_score(self, result: DatasetResult) -> int:
     """Compute 0-100 health score."""
-    score = 0
+    score: float = 0.0
 
     # Documentation Quality (20 pts)
     if result.description and len(result.description) > 50:

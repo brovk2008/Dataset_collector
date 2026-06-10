@@ -27,10 +27,17 @@ if TYPE_CHECKING:
 class DatasetDetailDialog(QDialog):
   """Shows full dataset details with similar datasets and co-downloads."""
 
-  def __init__(self, dataset: DatasetResult, parent=None, databrain: DatasetBrain | None = None) -> None:
+  def __init__(
+    self,
+    dataset: DatasetResult,
+    parent=None,
+    databrain: DatasetBrain | None = None,
+    all_datasets: list[DatasetResult] | None = None,
+  ) -> None:
     super().__init__(parent)
     self._dataset = dataset
     self._databrain = databrain
+    self._all_datasets = all_datasets or []
     self.setWindowTitle(f"Dataset Details — {dataset.name}")
     self.setMinimumSize(700, 700)
     self._build_ui()
@@ -47,9 +54,13 @@ class DatasetDetailDialog(QDialog):
     form.addRow("Available Sources:", QLabel(sources))
     form.addRow("Primary Source:", QLabel(ds.source.value))
     if ds.metadata.get("content_type") == "paper":
-      authors = ds.metadata.get("authors") or []
+      authors_val = ds.metadata.get("authors")
+      authors: list[str] = authors_val if isinstance(authors_val, list) else []
       if authors:
-        form.addRow("Authors:", QLabel(", ".join(authors[:8]) + ("..." if len(authors) > 8 else "")))
+        authors_display = ", ".join(str(a) for a in authors[:8])
+        if len(authors) > 8:
+          authors_display += f", and {len(authors) - 8} others"
+        form.addRow("Authors:", QLabel(authors_display))
       doi = ds.metadata.get("doi")
       if doi:
         form.addRow("DOI:", QLabel(doi))
@@ -93,9 +104,11 @@ class DatasetDetailDialog(QDialog):
     url_row.addWidget(copy_url_btn)
     layout.addLayout(url_row)
 
-    download_links = [u for u in ds.download_urls if u] or (
-      [ds.metadata.get("download_url")] if ds.metadata.get("download_url") else []
-    )
+    download_url_val = ds.metadata.get("download_url")
+    download_url = download_url_val if isinstance(download_url_val, str) else None
+    download_links: list[str] = [u for u in ds.download_urls if isinstance(u, str) and u]
+    if download_url:
+      download_links.append(download_url)
     if download_links:
       layout.addWidget(QLabel("Download URLs:"))
       links_field = QTextEdit()
@@ -117,7 +130,9 @@ class DatasetDetailDialog(QDialog):
     # Similar Datasets
     if self._databrain and hasattr(self._databrain, "similar_datasets"):
       try:
-        similar = self._databrain.similar_datasets.find_similar(ds.id, limit=5)
+        similar = self._databrain.similar_datasets.find_similar(
+          ds.id, self._all_datasets, limit=5
+        )
         if similar:
           layout.addWidget(QLabel("Related Datasets:"))
           similar_table = QTableWidget()

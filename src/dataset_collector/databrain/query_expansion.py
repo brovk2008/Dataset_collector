@@ -73,7 +73,7 @@ class QueryExpander:
     query_embedding: np.ndarray,
     datasets: list[DatasetResult],
     limit: int = 20,
-  ) -> list[str]:
+  ) -> list[tuple[str, str]]:
     """Find semantically similar dataset titles/descriptions."""
     similarities = {}
 

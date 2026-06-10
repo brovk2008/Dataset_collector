@@ -122,7 +122,7 @@ class UserBehaviorTracker:
       )
       conn.commit()
 
-      return cursor.lastrowid
+      return int(cursor.lastrowid or -1)
     except Exception as e:
       if self._logger:
         self._logger.error(f"Failed to log search: {e}")

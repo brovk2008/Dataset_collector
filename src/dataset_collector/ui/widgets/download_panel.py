@@ -171,19 +171,21 @@ class DownloadPanel(QWidget):
 
 
 def _format_bytes(size: int) -> str:
+  size_float = float(size)
   for unit in ("B", "KB", "MB", "GB", "TB"):
-    if size < 1024:
-      return f"{size:.1f} {unit}" if unit != "B" else f"{size} B"
-    size /= 1024
-  return f"{size:.1f} PB"
+    if size_float < 1024:
+      return f"{size_float:.1f} {unit}" if unit != "B" else f"{int(size_float)} B"
+    size_float /= 1024
+  return f"{size_float:.1f} PB"
 
 
 def _format_speed(bps: float) -> str:
+  speed = float(bps)
   for unit in ("B/s", "KB/s", "MB/s", "GB/s"):
-    if bps < 1024:
-      return f"{bps:.1f} {unit}"
-    bps /= 1024
-  return f"{bps:.1f} TB/s"
+    if speed < 1024:
+      return f"{speed:.1f} {unit}"
+    speed /= 1024
+  return f"{speed:.1f} TB/s"
 
 
 def _format_time(seconds: float) -> str:

@@ -73,7 +73,7 @@ class MainWindow(QMainWindow):
     self._storage = StorageManager(config.library_dir, self._logger)
 
     self._search_worker: SearchWorker | None = None
-    self._download_worker: DownloadWorker | None = None
+    self._download_worker: DownloadWorker | RetryDownloadWorker | None = None
     self._analysis_worker: AnalysisWorker | None = None
     self._last_analysis_path: str = ""
     self._analyze_queue: list[tuple[str, str]] = []
@@ -351,7 +351,7 @@ class MainWindow(QMainWindow):
   def _on_dataset_details(self, dataset: DatasetResult) -> None:
     self._log_click(dataset)
     databrain = self._get_databrain()
-    dialog = DatasetDetailDialog(dataset, self, databrain=databrain)
+    dialog = DatasetDetailDialog(dataset, self, databrain=databrain, all_datasets=self._results)
     if dialog.exec():
       self._results_table.select_dataset(dataset.id)
 

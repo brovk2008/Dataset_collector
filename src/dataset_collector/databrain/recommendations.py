@@ -31,11 +31,13 @@ class RecommendationEngine:
 
   def get_recommendations(
     self,
-    all_datasets: list[DatasetResult],
+    all_datasets: list[DatasetResult] | None = None,
     limit: int = 10,
   ) -> list[Recommendation]:
     """Get top personalized recommendations."""
     try:
+      if all_datasets is None:
+        all_datasets = []
       id_to_dataset = {d.id: d for d in all_datasets}
 
       # Get most clicked datasets
