@@ -38,6 +38,7 @@ from dataset_collector.ui.widgets.dataset_detail_dialog import DatasetDetailDial
 from dataset_collector.ui.widgets.download_panel import DownloadPanel
 from dataset_collector.ui.widgets.health_panel import HealthPanel
 from dataset_collector.ui.widgets.library_panel import LibraryPanel
+from dataset_collector.ui.widgets.recommendations_panel import RecommendationsPanel
 from dataset_collector.ui.widgets.results_table import ResultsTable
 from dataset_collector.ui.widgets.search_panel import SearchPanel
 from dataset_collector.ui.widgets.settings_panel import SettingsPanel
@@ -96,6 +97,8 @@ class MainWindow(QMainWindow):
           self._settings_panel.set_databrain(self._databrain)
         if hasattr(self, "_analytics_panel"):
           self._analytics_panel.set_databrain(self._databrain)
+        if hasattr(self, "_recommendations_panel"):
+          self._recommendations_panel.set_databrain(self._databrain)
       except Exception as e:
         self._logger.error(f"Failed to initialize DatasetBrain: {e}", origin="MainWindow")
     return self._databrain
@@ -197,6 +200,10 @@ class MainWindow(QMainWindow):
     self._analytics_panel = AnalyticsPanel(None)
     self._tabs.addTab(self._analytics_panel, "Analytics")
 
+    # Recommendations tab (DatasetBrain)
+    self._recommendations_panel = RecommendationsPanel(None)
+    self._tabs.addTab(self._recommendations_panel, "Recommendations")
+
     # Settings tab
     self._settings_panel = SettingsPanel(self._creds)
     self._settings_panel.set_databrain(None)
@@ -267,6 +274,17 @@ class MainWindow(QMainWindow):
     self._status_bar.showMessage("Scanning...")
     self._results_table.set_results([])  # Clear old results for new search
 
+    # Classify intent
+    databrain = self._get_databrain()
+    if databrain and hasattr(databrain, "intent_classifier"):
+      try:
+        intents = databrain.intent_classifier.classify_intent(request.query)
+        self._search_panel.set_intent_tags(intents)
+      except Exception:
+        self._search_panel.set_intent_tags([])
+    else:
+      self._search_panel.set_intent_tags([])
+
     self._search_worker = SearchWorker(self._search_engine, request)
     self._search_worker.progress.connect(self._on_scan_progress)
     self._search_worker.result_received.connect(self._on_result_received)  # NEW: Stream results
@@ -324,11 +342,17 @@ class MainWindow(QMainWindow):
       self._analytics_panel.set_databrain(databrain)
       self._analytics_panel.refresh()
 
+    # Refresh recommendations
+    if databrain and hasattr(self, "_recommendations_panel"):
+      self._recommendations_panel.set_databrain(databrain)
+      self._recommendations_panel.refresh()
+
     self._on_selection_changed()
 
   def _on_dataset_details(self, dataset: DatasetResult) -> None:
     self._log_click(dataset)
-    dialog = DatasetDetailDialog(dataset, self)
+    databrain = self._get_databrain()
+    dialog = DatasetDetailDialog(dataset, self, databrain=databrain)
     if dialog.exec():
       self._results_table.select_dataset(dataset.id)
 

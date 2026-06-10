@@ -180,6 +180,13 @@ class SearchPanel(QWidget):
     btn_layout.addWidget(self._scan_btn)
     layout.addLayout(btn_layout)
 
+    # Intent tags display
+    self._intent_label = QLabel("")
+    self._intent_label.setObjectName("secondaryLabel")
+    self._intent_label.setWordWrap(True)
+    self._intent_label.setVisible(False)
+    layout.addWidget(self._intent_label)
+
     layout.addStretch()
     scroll.setWidget(content)
     outer.addWidget(scroll)
@@ -272,6 +279,15 @@ class SearchPanel(QWidget):
       self.scan_requested.emit()
     else:
       self.cancel_requested.emit()
+
+  def set_intent_tags(self, intents: list[str]) -> None:
+    """Display detected search intents."""
+    if intents:
+      tags = " | ".join(intents)
+      self._intent_label.setText(f"Detected intent: {tags}")
+      self._intent_label.setVisible(True)
+    else:
+      self._intent_label.setVisible(False)
 
   @property
   def scan_button(self) -> QPushButton:

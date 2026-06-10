@@ -1,6 +1,8 @@
-"""Dataset detail dialog with copyable links."""
+"""Dataset detail dialog with related datasets."""
 
 from __future__ import annotations
+
+from typing import TYPE_CHECKING
 
 from PySide6.QtGui import QGuiApplication
 from PySide6.QtWidgets import (
@@ -10,21 +12,27 @@ from PySide6.QtWidgets import (
     QLabel,
     QMessageBox,
     QPushButton,
+    QTableWidget,
+    QTableWidgetItem,
     QTextEdit,
     QVBoxLayout,
 )
 
 from dataset_collector.core.models import DatasetResult
 
+if TYPE_CHECKING:
+  from dataset_collector.databrain import DatasetBrain
+
 
 class DatasetDetailDialog(QDialog):
-  """Shows full dataset details with copy-to-clipboard actions."""
+  """Shows full dataset details with similar datasets and co-downloads."""
 
-  def __init__(self, dataset: DatasetResult, parent=None) -> None:
+  def __init__(self, dataset: DatasetResult, parent=None, databrain: DatasetBrain | None = None) -> None:
     super().__init__(parent)
     self._dataset = dataset
+    self._databrain = databrain
     self.setWindowTitle(f"Dataset Details — {dataset.name}")
-    self.setMinimumSize(580, 520)
+    self.setMinimumSize(700, 700)
     self._build_ui()
 
   def _build_ui(self) -> None:
@@ -106,7 +114,41 @@ class DatasetDetailDialog(QDialog):
       files_field.setMaximumHeight(80)
       layout.addWidget(files_field)
 
-    btn_row = QHBoxLayout()
+    # Similar Datasets
+    if self._databrain and hasattr(self._databrain, "similar_datasets"):
+      try:
+        similar = self._databrain.similar_datasets.find_similar(ds.id, limit=5)
+        if similar:
+          layout.addWidget(QLabel("Related Datasets:"))
+          similar_table = QTableWidget()
+          similar_table.setColumnCount(2)
+          similar_table.setHorizontalHeaderLabels(["Dataset", "Similarity"])
+          similar_table.setMaximumHeight(120)
+          similar_table.setRowCount(len(similar))
+          for row, sim_ds in enumerate(similar):
+            similar_table.setItem(row, 0, QTableWidgetItem(sim_ds.name[:50]))
+            similarity_score = getattr(sim_ds, "semantic_score", 0)
+            similar_table.setItem(row, 1, QTableWidgetItem(f"{similarity_score:.2f}"))
+          similar_table.resizeColumnsToContents()
+          layout.addWidget(similar_table)
+      except Exception:
+        pass
+
+    # People Also Downloaded
+    if self._databrain and hasattr(self._databrain, "co_downloads_tracker"):
+      try:
+        co_downloads = self._databrain.co_downloads_tracker.get_co_downloads(ds.id, limit=5)
+        if co_downloads:
+          layout.addWidget(QLabel("People Also Downloaded:"))
+          codownload_text = "\n".join(
+            [f"• Dataset (downloaded {count}x)" for _, count in co_downloads[:5]]
+          )
+          codownload_label = QLabel(codownload_text)
+          layout.addWidget(codownload_label)
+      except Exception:
+        pass
+
+    layout.addStretch()
     btn_row.addStretch()
     select_btn = QPushButton("Select This Dataset")
     select_btn.setObjectName("primaryButton")
