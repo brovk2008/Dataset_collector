@@ -84,22 +84,52 @@ class MainWindow(QMainWindow):
     self._build_ui()
     self._connect_signals()
 
+    print("[MAINWINDOW] Forcing DatasetBrain initialization on startup...")
+    self._get_databrain()
+    print(f"[MAINWINDOW] DatasetBrain after init: {self._databrain}")
+
   def _get_databrain(self) -> DatasetBrain | None:
     """Lazy-initialize DatasetBrain on first access."""
     if self._databrain is None:
       try:
+        print("[DATABRAIN] Attempting initialization...")
+        self._logger.info("Starting DatasetBrain initialization")
+
         from dataset_collector.databrain import DatasetBrain as DB
+        print("[DATABRAIN] Import successful, creating instance...")
+
         self._databrain = DB(self._config, self._logger)
+        print(f"[DATABRAIN] Instance created: {self._databrain}")
+        print(f"[DATABRAIN] Enabled status: {self._databrain.enabled}")
+
         self._search_engine._databrain = self._databrain
+        print("[DATABRAIN] Search engine updated")
+
         if hasattr(self, "_settings_panel"):
+          print(f"[DATABRAIN] Setting in settings panel (had: {getattr(self._settings_panel, '_databrain', 'NOT SET')})")
           self._settings_panel.set_databrain(self._databrain)
+          print(f"[DATABRAIN] Settings panel now has: {self._settings_panel._databrain}")
+
         if hasattr(self, "_analytics_panel"):
+          print("[DATABRAIN] Setting in analytics panel")
           self._analytics_panel.set_databrain(self._databrain)
+
         if hasattr(self, "_recommendations_panel"):
+          print("[DATABRAIN] Setting in recommendations panel")
           self._recommendations_panel.set_databrain(self._databrain)
+
+        self._logger.info("DatasetBrain initialization successful")
+        print("[DATABRAIN] Initialization complete")
       except Exception as e:
         error_msg = f"Failed to initialize DatasetBrain: {e}"
+        print(f"[DATABRAIN ERROR] {error_msg}")
+        print("[DATABRAIN] Full traceback:")
+        import traceback
+        traceback.print_exc()
         self._logger.error(error_msg)
+        import sys
+        sys.stderr.write(f"\n[DATABRAIN INITIALIZATION FAILED]\n{error_msg}\n")
+        traceback.print_exc(file=sys.stderr)
     return self._databrain
 
   def _setup_window(self) -> None:

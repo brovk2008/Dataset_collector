@@ -168,6 +168,16 @@ class SettingsPanel(QWidget):
     enhanced_btns2.addStretch()
     enhanced_form.addRow("", enhanced_btns2)
 
+    # Debug button row
+    enhanced_btns3 = QHBoxLayout()
+    self._test_databrain = QPushButton("Test DatasetBrain (Debug)")
+    self._test_databrain.clicked.connect(self._on_test_databrain)
+    self._test_databrain.setMinimumWidth(120)
+    self._test_databrain.setStyleSheet("background-color: #3a3a3a; color: #aaa;")
+    enhanced_btns3.addWidget(self._test_databrain)
+    enhanced_btns3.addStretch()
+    enhanced_form.addRow("", enhanced_btns3)
+
     layout.addWidget(enhanced_group)
     layout.addStretch()
 
@@ -237,27 +247,45 @@ class SettingsPanel(QWidget):
 
   def set_databrain(self, databrain) -> None:
     """Set DatasetBrain instance and update UI."""
+    print(f"[SETTINGS] set_databrain called with: {databrain}")
     self._databrain = databrain
+    if databrain:
+      print(f"[SETTINGS] DatasetBrain received, enabled={databrain.enabled}")
+    else:
+      print(f"[SETTINGS] DatasetBrain is None")
     self._refresh_enhanced_search_status()
 
   def _refresh_enhanced_search_status(self) -> None:
     """Update Enhanced Search UI with current status."""
+    print(f"[SETTINGS] _refresh_enhanced_search_status called")
+    print(f"[SETTINGS] Has _databrain attr: {hasattr(self, '_databrain')}")
+    if hasattr(self, "_databrain"):
+      print(f"[SETTINGS] _databrain value: {self._databrain}")
+      print(f"[SETTINGS] _databrain is None: {self._databrain is None}")
+
     if not hasattr(self, "_databrain") or self._databrain is None:
+      print(f"[SETTINGS] Setting status to 'DatasetBrain not available'")
       self._enhanced_status.setText("DatasetBrain not available")
       return
 
+    print(f"[SETTINGS] Getting model status...")
     status = self._databrain.model_manager.get_model_status()
+    print(f"[SETTINGS] Model status: {status}")
+
     if status["installed"]:
-      self._enhanced_status.setText("Installed ✓")
+      print(f"[SETTINGS] Model installed, setting status to 'Installed [OK]'")
+      self._enhanced_status.setText("Installed [OK]")
       size_mb = status.get("size_mb", 90)
       self._model_info.setText(f"all-MiniLM-L6-v2 ({size_mb:.0f} MB)")
       self._download_model.setEnabled(False)
     else:
+      print(f"[SETTINGS] Model not installed, setting status to 'Not installed'")
       self._enhanced_status.setText("Not installed")
       self._model_info.setText("Download to enable semantic search")
       self._download_model.setEnabled(True)
 
     cache_stats = self._databrain.embeddings_cache.stats()
+    print(f"[SETTINGS] Cache stats: {cache_stats}")
     self._cache_size.setText(
       f"Cache: {cache_stats['total_size_mb']:.1f} MB ({cache_stats['total_cached']} datasets)"
     )
@@ -341,3 +369,68 @@ class SettingsPanel(QWidget):
     if reply == QMessageBox.StandardButton.Yes:
       self._databrain.behavior_tracker.clear_all()
       QMessageBox.information(self, "Data Cleared", "Learning data has been deleted.")
+
+  def _on_test_databrain(self) -> None:
+    """Test DatasetBrain status and display debug info."""
+    from PySide6.QtWidgets import QMessageBox
+
+    print("[TEST] DatasetBrain test button clicked")
+
+    if not hasattr(self, "_databrain") or self._databrain is None:
+      print("[TEST] DatasetBrain is None")
+      QMessageBox.warning(
+        self,
+        "DatasetBrain Not Available",
+        "DatasetBrain instance is None.\n\nCheck console for detailed logs."
+      )
+      return
+
+    print(f"[TEST] DatasetBrain exists: {self._databrain}")
+
+    try:
+      # Test model
+      model_status = self._databrain.model_manager.get_model_status()
+      print(f"[TEST] Model status: {model_status}")
+
+      # Test cache
+      cache_stats = self._databrain.embeddings_cache.stats()
+      print(f"[TEST] Cache stats: {cache_stats}")
+
+      # Test enabled
+      enabled = self._databrain.enabled
+      print(f"[TEST] DatasetBrain enabled: {enabled}")
+
+      info = f"""DatasetBrain Debug Info:
+
+Object: {self._databrain}
+Enabled: {enabled}
+
+Model Status:
+- Installed: {model_status['installed']}
+- Size: {model_status['size_mb']:.1f} MB
+- Path: {model_status['path']}
+- Embedding Dim: {model_status['embedding_dim']}
+
+Cache:
+- Total Cached: {cache_stats['total_cached']} datasets
+- Total Size: {cache_stats['total_size_mb']:.1f} MB
+
+Components:
+- model_manager: {self._databrain.model_manager}
+- embeddings_cache: {self._databrain.embeddings_cache}
+- behavior_tracker: {self._databrain.behavior_tracker}
+"""
+
+      QMessageBox.information(self, "DatasetBrain Test", info)
+      print("[TEST] Test completed successfully")
+
+    except Exception as e:
+      print(f"[TEST] Error during test: {e}")
+      import traceback
+      traceback.print_exc()
+      QMessageBox.critical(
+        self,
+        "DatasetBrain Test Error",
+        f"Error testing DatasetBrain:\n{e}\n\nCheck console for full traceback."
+      )
+
