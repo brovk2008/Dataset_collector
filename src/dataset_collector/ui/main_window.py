@@ -90,9 +90,7 @@ class MainWindow(QMainWindow):
       try:
         from dataset_collector.databrain import DatasetBrain as DB
         self._databrain = DB(self._config, self._logger)
-        # Update SearchEngine with initialized DatasetBrain
         self._search_engine._databrain = self._databrain
-        # Update all UI panels with DatasetBrain
         if hasattr(self, "_settings_panel"):
           self._settings_panel.set_databrain(self._databrain)
         if hasattr(self, "_analytics_panel"):
@@ -100,7 +98,8 @@ class MainWindow(QMainWindow):
         if hasattr(self, "_recommendations_panel"):
           self._recommendations_panel.set_databrain(self._databrain)
       except Exception as e:
-        self._logger.error(f"Failed to initialize DatasetBrain: {e}", origin="MainWindow")
+        error_msg = f"Failed to initialize DatasetBrain: {e}"
+        self._logger.error(error_msg)
     return self._databrain
 
   def _setup_window(self) -> None:
