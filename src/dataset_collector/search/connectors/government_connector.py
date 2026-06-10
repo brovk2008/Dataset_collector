@@ -84,7 +84,7 @@ class GovernmentConnector(BaseConnector):
           self._report_progress(
             progress_callback,
             f"Searching {portal['name']}...",
-            pi / len(portals) * 100,
+            (pi / len(portals) * 100) if len(portals) > 0 else 0.0,
           )
           try:
             if portal["type"] == "socrata":

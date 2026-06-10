@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from dataset_collector.logging.logger import AppLogger
@@ -22,7 +22,7 @@ class UserBehaviorTracker:
     self._logger = logger
     self._db_path = self._cache_dir / "user_behavior.db"
     self._conn: sqlite3.Connection | None = None
-    self._session_id = datetime.utcnow().isoformat()
+    self._session_id = datetime.now(timezone.utc).isoformat()
     self._init_db()
 
   def _init_db(self) -> None:
