@@ -84,37 +84,49 @@ class SearchEngine:
     max_per_source = self._config.get("search", "max_results_per_source", default=100)
     rate_delay = self._config.get("search", "rate_limit_delay_seconds", default=0.5)
 
-    all_results: list[DatasetResult] = []
     sources = request.sources
     total_sources = len(sources)
 
+    # NEW: Create parallel search tasks for all sources
+    search_tasks = []
     for si, source in enumerate(sources):
-      if self._cancelled:
-        break
-
       connector = self._connectors.get(source)
       if not connector:
         continue
 
-      source_progress_base = si / total_sources * 100
+      # Create progress callback for this source (20% per source in progress bar)
+      def make_callback(source_index, total):
+        def source_callback(msg: str, pct: float):
+          if progress_callback and not self._cancelled:
+            base = (source_index / total) * 100
+            span = 100 / total
+            progress_callback(msg, base + (pct / 100) * span)
+        return source_callback
 
-      def source_callback(msg: str, pct: float, base=source_progress_base, span=100 / total_sources):
-        if progress_callback:
-          progress_callback(msg, base + pct / 100 * span)
+      # Create task with staggered start (rate limiting)
+      task = self._search_source(
+        connector,
+        source,
+        request,
+        max_per_source,
+        make_callback(si, total_sources),
+        delay_seconds=si * rate_delay,
+      )
+      search_tasks.append(task)
 
-      try:
-        results = await connector.search(
-          request.query,
-          request.filters,
-          max_results=max_per_source,
-          progress_callback=source_callback,
-        )
-        all_results.extend(results)
-      except Exception as e:
-        self._logger.error(f"Search failed for {source.value}: {e}", source=source.value)
+    # Execute all searches in parallel
+    if progress_callback:
+      progress_callback("Searching all sources...", 5.0)
 
-      if si < total_sources - 1:
-        await asyncio.sleep(rate_delay)
+    results_per_source = await asyncio.gather(*search_tasks, return_exceptions=True)
+
+    # Collect results, filtering out exceptions
+    all_results: list[DatasetResult] = []
+    for result in results_per_source:
+      if isinstance(result, Exception):
+        continue
+      if result:
+        all_results.extend(result)
 
     # Merge cross-source duplicates, then score and rank
     merged = merge_duplicates(all_results)
@@ -137,7 +149,7 @@ class SearchEngine:
         # Score results with semantic similarity
         merged = self._databrain.semantic_ranker.score_results(request.query, merged)
       except Exception as e:
-        self._logger.error(f"Semantic scoring failed: {e}", origin="SearchEngine")
+        self._logger.error(f"Semantic scoring failed: {e}")
         # Continue with keyword-only ranking if semantic fails
 
     # Perform hybrid ranking
@@ -163,3 +175,32 @@ class SearchEngine:
       progress_callback(f"Search complete: {len(ranked)} relevant datasets found", 100.0)
 
     return ranked
+
+  async def _search_source(
+    self,
+    connector: BaseConnector,
+    source: DataSource,
+    request: SearchRequest,
+    max_results: int,
+    progress_callback: Callable[[str, float], None] | None = None,
+    delay_seconds: float = 0.0,
+  ) -> list[DatasetResult]:
+    """Search a single source with optional delay for rate limiting."""
+    try:
+      # Stagger requests to respect rate limits
+      if delay_seconds > 0:
+        await asyncio.sleep(delay_seconds)
+
+      if self._cancelled:
+        return []
+
+      results = await connector.search(
+        request.query,
+        request.filters,
+        max_results=max_results,
+        progress_callback=progress_callback,
+      )
+      return results or []
+    except Exception as e:
+      self._logger.error(f"Search failed for {source.value}: {e}")
+      return []  # Graceful degradation: return empty list
