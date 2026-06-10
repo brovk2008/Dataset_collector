@@ -125,7 +125,7 @@ class UserBehaviorTracker:
       return cursor.lastrowid
     except Exception as e:
       if self._logger:
-        self._logger.error(f"Failed to log search: {e}", origin="UserBehaviorTracker")
+        self._logger.error(f"Failed to log search: {e}")
       return -1
 
   def log_click(
@@ -150,7 +150,7 @@ class UserBehaviorTracker:
       conn.commit()
     except Exception as e:
       if self._logger:
-        self._logger.error(f"Failed to log click: {e}", origin="UserBehaviorTracker")
+        self._logger.error(f"Failed to log click: {e}")
 
   def log_download(self, dataset_id: str) -> None:
     """Log a dataset download."""
@@ -168,7 +168,7 @@ class UserBehaviorTracker:
       conn.commit()
     except Exception as e:
       if self._logger:
-        self._logger.error(f"Failed to log download: {e}", origin="UserBehaviorTracker")
+        self._logger.error(f"Failed to log download: {e}")
 
   def log_download_set(self, dataset_ids: list[str]) -> None:
     """Log a multi-dataset download (for co-download tracking)."""
@@ -217,7 +217,7 @@ class UserBehaviorTracker:
       conn.commit()
     except Exception as e:
       if self._logger:
-        self._logger.error(f"Failed to log favorite: {e}", origin="UserBehaviorTracker")
+        self._logger.error(f"Failed to log favorite: {e}")
 
   def get_click_score(self, dataset_id: str) -> float:
     """Compute 0-1 click score based on frequency and recency."""
@@ -359,7 +359,7 @@ class UserBehaviorTracker:
       conn.commit()
 
       if self._logger:
-        self._logger.info("User behavior data cleared", origin="UserBehaviorTracker")
+        self._logger.info("User behavior data cleared")
     except Exception as e:
       if self._logger:
         self._logger.error(

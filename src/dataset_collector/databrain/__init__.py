@@ -71,7 +71,7 @@ class DatasetBrain:
     )
 
     self._enabled = True
-    self._logger.info("DatasetBrain initialized", origin="DatasetBrain")
+    self._logger.info("DatasetBrain initialized")
 
   @property
   def enabled(self) -> bool:
@@ -90,7 +90,7 @@ class DatasetBrain:
     """Cleanup resources."""
     self.embeddings_cache.close()
     self.behavior_tracker.close()
-    self._logger.info("DatasetBrain shutdown", origin="DatasetBrain")
+    self._logger.info("DatasetBrain shutdown")
 
 
 __all__ = ["DatasetBrain"]

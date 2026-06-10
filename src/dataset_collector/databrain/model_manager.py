@@ -76,7 +76,7 @@ class ModelManager:
       if progress_callback:
         progress_callback("Model downloaded successfully", 100.0)
 
-      self._logger.info(f"Model downloaded: {self.MODEL_NAME}", origin="ModelManager")
+      self._logger.info(f"Model downloaded: {self.MODEL_NAME}")
       return True
     except Exception as e:
       self._logger.error(
@@ -115,6 +115,6 @@ class ModelManager:
 
         shutil.rmtree(self._model_path)
         self._model_instance = None
-        self._logger.info("Model cache cleared", origin="ModelManager")
+        self._logger.info("Model cache cleared")
     except Exception as e:
-      self._logger.error(f"Failed to clear cache: {e}", origin="ModelManager")
+      self._logger.error(f"Failed to clear cache: {e}")

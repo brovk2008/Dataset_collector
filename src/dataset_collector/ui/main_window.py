@@ -87,9 +87,15 @@ class MainWindow(QMainWindow):
     """Lazy-initialize DatasetBrain on first access."""
     if self._databrain is None:
       try:
-        self._databrain = DatasetBrain(self._config, self._logger)
+        from dataset_collector.databrain import DatasetBrain as DB
+        self._databrain = DB(self._config, self._logger)
         # Update SearchEngine with initialized DatasetBrain
         self._search_engine._databrain = self._databrain
+        # Update all UI panels with DatasetBrain
+        if hasattr(self, "_settings_panel"):
+          self._settings_panel.set_databrain(self._databrain)
+        if hasattr(self, "_analytics_panel"):
+          self._analytics_panel.set_databrain(self._databrain)
       except Exception as e:
         self._logger.error(f"Failed to initialize DatasetBrain: {e}", origin="MainWindow")
     return self._databrain

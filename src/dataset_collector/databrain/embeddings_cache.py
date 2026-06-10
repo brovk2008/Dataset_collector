@@ -178,7 +178,7 @@ class EmbeddingsCache:
       conn.commit()
 
       if self._logger:
-        self._logger.info("Embeddings cache cleared", origin="EmbeddingsCache")
+        self._logger.info("Embeddings cache cleared")
     except Exception as e:
       if self._logger:
         self._logger.error(
