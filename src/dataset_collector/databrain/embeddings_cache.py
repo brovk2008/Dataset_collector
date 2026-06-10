@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 import numpy as np
@@ -93,8 +93,8 @@ class EmbeddingsCache:
           ) else dataset.metadata.get("tags", ""),
           dataset.metadata.get("category", ""),
           embedding_bytes,
-          datetime.utcnow(),
-          datetime.utcnow(),
+          datetime.now(timezone.utc),
+          datetime.now(timezone.utc),
         ),
       )
       conn.commit()
@@ -207,7 +207,7 @@ class EmbeddingsCache:
         "embedding_size_mb": size_mb,
         "db_size_mb": db_size_mb,
         "total_size_mb": size_mb + db_size_mb,
-        "last_updated": datetime.utcnow().isoformat(),
+        "last_updated": datetime.now(timezone.utc).isoformat(),
       }
     except Exception as e:
       if self._logger:
@@ -220,7 +220,7 @@ class EmbeddingsCache:
         "embedding_size_mb": 0,
         "db_size_mb": 0,
         "total_size_mb": 0,
-        "last_updated": datetime.utcnow().isoformat(),
+        "last_updated": datetime.now(timezone.utc).isoformat(),
       }
 
   def close(self) -> None:

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable
 
 from dataset_collector.core.enums import DataSource
@@ -106,7 +106,7 @@ class BiorxivConnector(BaseConnector):
       try:
         published_dt = datetime.fromisoformat(published_str.split("T")[0])
       except Exception:
-        published_dt = datetime.now()
+        published_dt = datetime.now(timezone.utc)
 
       # Get authors
       authors = article.get("authors", [])

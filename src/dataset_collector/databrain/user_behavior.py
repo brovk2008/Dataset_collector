@@ -118,7 +118,7 @@ class UserBehaviorTracker:
         INSERT INTO searches (query, source_filter, timestamp, results_count, session_id)
         VALUES (?, ?, ?, ?, ?)
         """,
-        (query, source_filter, datetime.utcnow(), results_count, self._session_id),
+        (query, source_filter, datetime.now(timezone.utc), results_count, self._session_id),
       )
       conn.commit()
 
@@ -145,7 +145,7 @@ class UserBehaviorTracker:
         INSERT INTO clicks (search_id, dataset_id, rank_position, timestamp, clicked_from_source)
         VALUES (?, ?, ?, ?, ?)
         """,
-        (search_id, dataset_id, rank_position, datetime.utcnow(), clicked_from),
+        (search_id, dataset_id, rank_position, datetime.now(timezone.utc), clicked_from),
       )
       conn.commit()
     except Exception as e:
@@ -163,7 +163,7 @@ class UserBehaviorTracker:
         INSERT INTO downloads (dataset_id, timestamp, session_id)
         VALUES (?, ?, ?)
         """,
-        (dataset_id, datetime.utcnow(), self._session_id),
+        (dataset_id, datetime.now(timezone.utc), self._session_id),
       )
       conn.commit()
     except Exception as e:
@@ -178,7 +178,7 @@ class UserBehaviorTracker:
     try:
       # Generate all unique pairs (bidirectional)
       pairs = []
-      now = datetime.utcnow()
+      now = datetime.now(timezone.utc)
       for i, dataset_a in enumerate(dataset_ids):
         for dataset_b in dataset_ids[i + 1:]:
           pairs.append((dataset_a, dataset_b, now))
@@ -220,7 +220,7 @@ class UserBehaviorTracker:
         INSERT OR REPLACE INTO favorites (dataset_id, favorited_at, tags)
         VALUES (?, ?, ?)
         """,
-        (dataset_id, datetime.utcnow(), tags),
+        (dataset_id, datetime.now(timezone.utc), tags),
       )
       conn.commit()
     except Exception as e:
@@ -250,7 +250,7 @@ class UserBehaviorTracker:
       # Recency decay: 30 days ago = 50% credit
       if last_click_time:
         last_click = datetime.fromisoformat(last_click_time)
-        days_ago = (datetime.utcnow() - last_click).days
+        days_ago = (datetime.now(timezone.utc) - last_click).days
         recency_factor = max(0, 1 - days_ago / 60)
       else:
         recency_factor = 0.5
@@ -300,7 +300,7 @@ class UserBehaviorTracker:
       conn = self._get_connection()
       cursor = conn.cursor()
 
-      cutoff_date = datetime.utcnow() - timedelta(days=days_back)
+      cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_back)
 
       cursor.execute(
         """
@@ -330,7 +330,7 @@ class UserBehaviorTracker:
       conn = self._get_connection()
       cursor = conn.cursor()
 
-      cutoff_date = datetime.utcnow() - timedelta(days=days_back)
+      cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_back)
 
       cursor.execute(
         """
@@ -358,7 +358,7 @@ class UserBehaviorTracker:
       conn = self._get_connection()
       cursor = conn.cursor()
 
-      cutoff_date = datetime.utcnow() - timedelta(days=days_back)
+      cutoff_date = datetime.now(timezone.utc) - timedelta(days=days_back)
 
       # Count searches with at least 1 click
       cursor.execute(

@@ -172,7 +172,7 @@ def find_semantic_duplicates(
 
 def merge_duplicates_with_semantic(
   results: list[DatasetResult],
-  embeddings: dict[str, float] | None = None,
+  embeddings: dict[str, np.ndarray] | None = None,
   threshold: float = 0.82,
   semantic_threshold: float = 0.75,
 ) -> list[DatasetResult]:

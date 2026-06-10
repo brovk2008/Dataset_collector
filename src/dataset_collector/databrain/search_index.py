@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from dataset_collector.core.models import DatasetResult
@@ -113,7 +113,7 @@ class SearchIndex:
         result.quality_score,
         result.health_score,
         tags,
-        datetime.now(),
+        datetime.now(timezone.utc),
       ])
 
       self.conn.commit()

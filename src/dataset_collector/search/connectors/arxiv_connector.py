@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Callable
 
 import feedparser
@@ -112,7 +112,7 @@ class ArxivConnector(BaseConnector):
       try:
         published_dt = datetime.fromisoformat(published_str.replace("Z", "+00:00"))
       except Exception:
-        published_dt = datetime.now()
+        published_dt = datetime.now(timezone.utc)
 
       # Extract authors
       authors = []
