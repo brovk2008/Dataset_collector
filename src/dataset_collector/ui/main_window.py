@@ -100,7 +100,7 @@ class MainWindow(QMainWindow):
       self._config.get("ui", "window_width", default=1280),
       self._config.get("ui", "window_height", default=800),
     )
-    self.setMinimumSize(900, 600)
+    self.setMinimumSize(1000, 700)
 
     theme_path = Path(__file__).parent / "styles" / "dark_theme.qss"
     if theme_path.exists():

@@ -74,20 +74,31 @@ class LibraryPanel(QWidget):
     layout.addWidget(self._table)
 
     btn_layout = QHBoxLayout()
+    btn1_group = QHBoxLayout()
     for text, slot in [
       ("Refresh", self.refresh),
       ("Open Folder", self._open_folder),
       ("Analyze", self._on_analyze),
-      ("Export Metadata", self._on_export),
     ]:
       btn = QPushButton(text)
       btn.clicked.connect(slot)
-      btn_layout.addWidget(btn)
+      btn.setMinimumWidth(80)
+      btn1_group.addWidget(btn)
+    btn_layout.addLayout(btn1_group)
+
+    btn2_group = QHBoxLayout()
+    export_btn = QPushButton("Export Metadata")
+    export_btn.clicked.connect(self._on_export)
+    export_btn.setMinimumWidth(100)
+    btn2_group.addWidget(export_btn)
+
     self._delete_btn = QPushButton("Delete Selected")
     self._delete_btn.setObjectName("dangerButton")
     self._delete_btn.clicked.connect(self._on_delete)
-    btn_layout.addWidget(self._delete_btn)
-    btn_layout.addStretch()
+    self._delete_btn.setMinimumWidth(80)
+    btn2_group.addWidget(self._delete_btn)
+    btn2_group.addStretch()
+    btn_layout.addLayout(btn2_group)
     layout.addLayout(btn_layout)
 
   def refresh(self) -> None:

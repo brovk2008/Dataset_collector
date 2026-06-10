@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 
 import httpx
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, Qt
 from PySide6.QtWidgets import (
     QFormLayout,
     QGroupBox,
@@ -14,6 +14,7 @@ from PySide6.QtWidgets import (
     QLineEdit,
     QMessageBox,
     QPushButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -33,7 +34,18 @@ class SettingsPanel(QWidget):
     self._load_values()
 
   def _build_ui(self) -> None:
-    layout = QVBoxLayout(self)
+    outer_layout = QVBoxLayout(self)
+    outer_layout.setContentsMargins(0, 0, 0, 0)
+
+    # Create scrollable content area
+    scroll = QScrollArea()
+    scroll.setWidgetResizable(True)
+    scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+    scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+
+    content_widget = QWidget()
+    layout = QVBoxLayout(content_widget)
+    layout.setContentsMargins(8, 8, 8, 8)
 
     intro = QLabel(
       "All authentication is optional. Dataset_Collector works immediately for public datasets. "
@@ -101,7 +113,7 @@ class SettingsPanel(QWidget):
     # Government
     gov_group = QGroupBox("Government Data")
     gov_layout = QVBoxLayout(gov_group)
-    self._gov_status = QLabel("✓ Public access mode enabled — no API key required")
+    self._gov_status = QLabel("Public access mode enabled - no API key required")
     self._gov_status.setStyleSheet("color: #4F8CFF;")
     gov_layout.addWidget(self._gov_status)
     gov_hint = QLabel(
@@ -136,22 +148,32 @@ class SettingsPanel(QWidget):
     self._cache_size.setObjectName("secondaryLabel")
     enhanced_form.addRow("Size:", self._cache_size)
 
-    enhanced_btns = QHBoxLayout()
+    # Buttons in two rows for small screens
+    enhanced_btns1 = QHBoxLayout()
     self._download_model = QPushButton("Download Model (90 MB)")
     self._download_model.clicked.connect(self._on_download_model)
+    self._download_model.setMinimumWidth(120)
+    enhanced_btns1.addWidget(self._download_model)
+    enhanced_btns1.addStretch()
+    enhanced_form.addRow("", enhanced_btns1)
+
+    enhanced_btns2 = QHBoxLayout()
     self._rebuild_cache = QPushButton("Rebuild Embeddings")
     self._rebuild_cache.clicked.connect(self._on_rebuild_cache)
+    self._rebuild_cache.setMinimumWidth(120)
     self._clear_learning = QPushButton("Clear Learning Data")
     self._clear_learning.clicked.connect(self._on_clear_learning)
-    enhanced_btns.addWidget(self._download_model)
-    enhanced_btns.addWidget(self._rebuild_cache)
-    enhanced_btns.addWidget(self._clear_learning)
-    enhanced_btns.addStretch()
-    enhanced_form.addRow("", enhanced_btns)
+    self._clear_learning.setMinimumWidth(120)
+    enhanced_btns2.addWidget(self._rebuild_cache)
+    enhanced_btns2.addWidget(self._clear_learning)
+    enhanced_btns2.addStretch()
+    enhanced_form.addRow("", enhanced_btns2)
 
     layout.addWidget(enhanced_group)
-
     layout.addStretch()
+
+    scroll.setWidget(content_widget)
+    outer_layout.addWidget(scroll)
 
   def _load_values(self) -> None:
     self._kaggle_user.setText(self._store.kaggle_username())

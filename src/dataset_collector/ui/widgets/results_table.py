@@ -62,32 +62,47 @@ class ResultsTable(QWidget):
     stats_layout.addWidget(self._files_label)
     layout.addLayout(stats_layout)
 
-    controls = QHBoxLayout()
+    # Filter row
+    filter_layout = QHBoxLayout()
     self._filter_input = QLineEdit()
     self._filter_input.setPlaceholderText("Filter results...")
     self._filter_input.textChanged.connect(self._on_filter_changed)
-    controls.addWidget(self._filter_input)
+    self._filter_input.setMinimumHeight(30)
+    filter_layout.addWidget(self._filter_input)
+    layout.addLayout(filter_layout)
 
+    # Button row 1
+    controls1 = QHBoxLayout()
     self._select_all_btn = QPushButton("Select All")
     self._select_all_btn.clicked.connect(self.select_all_on_page)
-    controls.addWidget(self._select_all_btn)
+    self._select_all_btn.setMinimumWidth(80)
+    controls1.addWidget(self._select_all_btn)
 
     self._deselect_all_btn = QPushButton("Deselect All")
     self._deselect_all_btn.clicked.connect(self.deselect_all)
-    controls.addWidget(self._deselect_all_btn)
+    self._deselect_all_btn.setMinimumWidth(80)
+    controls1.addWidget(self._deselect_all_btn)
 
     self._details_btn = QPushButton("View Details")
     self._details_btn.clicked.connect(self._open_selected_details)
-    controls.addWidget(self._details_btn)
+    self._details_btn.setMinimumWidth(80)
+    controls1.addWidget(self._details_btn)
 
     self._score_btn = QPushButton("Score Breakdown")
     self._score_btn.clicked.connect(self._show_score_breakdown)
-    controls.addWidget(self._score_btn)
+    self._score_btn.setMinimumWidth(100)
+    controls1.addWidget(self._score_btn)
+    controls1.addStretch()
+    layout.addLayout(controls1)
 
+    # Button row 2
+    controls2 = QHBoxLayout()
     self._compare_btn = QPushButton("Compare Selected")
     self._compare_btn.clicked.connect(self._compare_selected)
-    controls.addWidget(self._compare_btn)
-    layout.addLayout(controls)
+    self._compare_btn.setMinimumWidth(100)
+    controls2.addWidget(self._compare_btn)
+    controls2.addStretch()
+    layout.addLayout(controls2)
 
     self._table = QTableWidget()
     self._table.setColumnCount(len(self.COLUMNS))
@@ -96,14 +111,25 @@ class ResultsTable(QWidget):
     self._table.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
     self._table.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
     self._table.setSortingEnabled(False)
-    self._table.horizontalHeader().setStretchLastSection(True)
-    self._table.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
-    self._table.horizontalHeader().setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)
-    self._table.setColumnWidth(0, 30)
-    self._table.setColumnWidth(3, 72)
+
+    # Configure column widths - make adjustable for small windows
+    header = self._table.horizontalHeader()
+    header.setStretchLastSection(True)
+    header.setSectionResizeMode(0, QHeaderView.ResizeMode.ResizeToContents)  # Checkbox
+    header.setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)  # Name (stretch)
+    header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Rank
+    header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Health
+    header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Quality
+    header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Sources
+    header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Size
+    header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # License
+    header.setSectionResizeMode(8, QHeaderView.ResizeMode.ResizeToContents)  # Updated
+
+    self._table.setColumnWidth(0, 35)
+    self._table.setColumnWidth(3, 75)
     self._table.itemChanged.connect(self._on_item_changed)
     self._table.cellDoubleClicked.connect(self._on_double_click)
-    layout.addWidget(self._table)
+    layout.addWidget(self._table, stretch=1)
 
     # Pagination bar
     page_layout = QHBoxLayout()

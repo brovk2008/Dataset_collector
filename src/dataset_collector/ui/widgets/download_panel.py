@@ -87,12 +87,20 @@ class DownloadPanel(QWidget):
     stats_layout = QHBoxLayout()
     self._speed_label = QLabel("Speed: —")
     self._speed_label.setObjectName("secondaryLabel")
-    self._remaining_label = QLabel("Remaining: —")
+    self._speed_label.setMinimumWidth(100)
+
+    self._remaining_label = QLabel("ETA: —")
     self._remaining_label.setObjectName("secondaryLabel")
+    self._remaining_label.setMinimumWidth(100)
+
     self._remaining_size_label = QLabel("Left: —")
     self._remaining_size_label.setObjectName("secondaryLabel")
+    self._remaining_size_label.setMinimumWidth(100)
+
     self._queue_label = QLabel("Queue: 0 | OK: 0 | Failed: 0")
     self._queue_label.setObjectName("secondaryLabel")
+    self._queue_label.setMinimumWidth(150)
+
     stats_layout.addWidget(self._speed_label)
     stats_layout.addWidget(self._remaining_label)
     stats_layout.addWidget(self._remaining_size_label)
