@@ -29,6 +29,7 @@ class CollectionsGenerator:
   ) -> None:
     self._logger = logger
     self._collections_cache: list[Collection] = []
+    self._dataset_to_collection: dict[str, Collection] = {}  # O(1) lookup cache
 
   def detect_collections(
     self,
@@ -64,6 +65,13 @@ class CollectionsGenerator:
           collections.append(collection)
 
       self._collections_cache = collections
+
+      # Build reverse mapping for O(1) lookup
+      self._dataset_to_collection.clear()
+      for collection in collections:
+        for dataset in collection.datasets:
+          self._dataset_to_collection[dataset.id] = collection
+
       return collections
     except Exception as e:
       if self._logger:
@@ -76,11 +84,8 @@ class CollectionsGenerator:
   def get_collection_for_dataset(
     self, dataset_id: str
   ) -> Collection | None:
-    """Find which collection a dataset belongs to."""
-    for collection in self._collections_cache:
-      if any(d.id == dataset_id for d in collection.datasets):
-        return collection
-    return None
+    """Find which collection a dataset belongs to (O(1) via cache)."""
+    return self._dataset_to_collection.get(dataset_id)
 
   def get_all_collections(self) -> list[Collection]:
     """Return all detected collections."""

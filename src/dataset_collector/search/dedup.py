@@ -20,27 +20,68 @@ def _similarity(a: str, b: str) -> float:
 
 
 def merge_duplicates(results: list[DatasetResult], threshold: float = 0.82) -> list[DatasetResult]:
-  """Merge datasets that appear across multiple sources."""
+  """Merge datasets that appear across multiple sources (O(n log n) via hash buckets)."""
+  if not results:
+    return []
+
   merged: list[DatasetResult] = []
   used: set[int] = set()
 
+  # Pre-compute normalized names and identifiers for O(1) bucket lookup
+  normalized_names = [_normalize_name(r.name) for r in results]
+  urls = [r.url for r in results]
+  dois = [r.metadata.get("doi", "") for r in results]
+  refs = [r.metadata.get("ref", "") for r in results]
+
+  # Build hash buckets for quick candidate matching
+  url_buckets: dict[str, list[int]] = {}
+  name_buckets: dict[str, list[int]] = {}
+  doi_buckets: dict[str, list[int]] = {}
+  ref_buckets: dict[str, list[int]] = {}
+
+  for idx, result in enumerate(results):
+    if urls[idx]:
+      url_buckets.setdefault(urls[idx], []).append(idx)
+    if normalized_names[idx]:
+      name_buckets.setdefault(normalized_names[idx], []).append(idx)
+    if dois[idx]:
+      doi_buckets.setdefault(dois[idx], []).append(idx)
+    if refs[idx]:
+      ref_buckets.setdefault(refs[idx], []).append(idx)
+
+  # Process results, grouping by buckets + similarity
   for i, a in enumerate(results):
     if i in used:
       continue
-    group = [a]
+
+    group = [i]
     used.add(i)
 
-    for j, b in enumerate(results):
+    # Find candidates from all buckets
+    candidates = set()
+    if urls[i]:
+      candidates.update(url_buckets.get(urls[i], []))
+    if normalized_names[i]:
+      candidates.update(name_buckets.get(normalized_names[i], []))
+    if dois[i]:
+      candidates.update(doi_buckets.get(dois[i], []))
+    if refs[i]:
+      candidates.update(ref_buckets.get(refs[i], []))
+
+    # Check only candidates (not all remaining items)
+    for j in candidates:
       if j in used or j <= i:
         continue
-      if _is_duplicate(a, b, threshold):
-        group.append(b)
+      if _is_duplicate(results[i], results[j], threshold):
+        group.append(j)
         used.add(j)
 
-    if len(group) == 1:
-      merged.append(a)
+    # Merge group and add to result
+    group_results = [results[idx] for idx in group]
+    if len(group_results) == 1:
+      merged.append(group_results[0])
     else:
-      merged.append(_merge_group(group))
+      merged.append(_merge_group(group_results))
 
   return merged
 

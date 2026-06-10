@@ -33,45 +33,8 @@ class SearchAnalytics:
     return self._behavior.get_most_clicked(limit, days_back)
 
   def get_search_success_rate(self, days_back: int = 30) -> float:
-    """Compute percentage of searches with ≥1 click."""
-    try:
-      import sqlite3
-      from datetime import datetime, timedelta
-
-      conn = sqlite3.connect(str(self._behavior._db_path))
-      cursor = conn.cursor()
-
-      cutoff_date = datetime.utcnow() - timedelta(days=days_back)
-
-      # Count searches with at least 1 click
-      cursor.execute(
-        """
-        SELECT COUNT(DISTINCT s.id)
-        FROM searches s
-        INNER JOIN clicks c ON s.id = c.search_id
-        WHERE s.timestamp > ?
-        """,
-        (cutoff_date,),
-      )
-      searches_with_clicks = cursor.fetchone()[0] or 0
-
-      # Count total searches
-      cursor.execute(
-        "SELECT COUNT(*) FROM searches WHERE timestamp > ?",
-        (cutoff_date,),
-      )
-      total_searches = cursor.fetchone()[0] or 1
-
-      conn.close()
-
-      return searches_with_clicks / total_searches if total_searches > 0 else 0.0
-    except Exception as e:
-      if self._logger:
-        self._logger.error(
-          f"Failed to compute success rate: {e}",
-          origin="SearchAnalytics",
-        )
-      return 0.0
+    """Compute percentage of searches with ≥1 click (uses connection pool)."""
+    return self._behavior.get_search_success_rate(days_back)
 
   def get_model_stats(self) -> dict:
     """Get DatasetBrain model and cache statistics."""

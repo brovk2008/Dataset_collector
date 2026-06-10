@@ -171,18 +171,26 @@ class UserBehaviorTracker:
         self._logger.error(f"Failed to log download: {e}")
 
   def log_download_set(self, dataset_ids: list[str]) -> None:
-    """Log a multi-dataset download (for co-download tracking)."""
-    for i, dataset_a in enumerate(dataset_ids):
-      for dataset_b in dataset_ids[i + 1 :]:
-        self._log_co_download(dataset_a, dataset_b)
+    """Log multi-dataset download in single batch transaction (O(n) not O(n²))."""
+    if len(dataset_ids) < 2:
+      return
 
-  def _log_co_download(self, dataset_a_id: str, dataset_b_id: str) -> None:
-    """Track co-download pair."""
     try:
+      # Generate all unique pairs (bidirectional)
+      pairs = []
+      now = datetime.utcnow()
+      for i, dataset_a in enumerate(dataset_ids):
+        for dataset_b in dataset_ids[i + 1:]:
+          pairs.append((dataset_a, dataset_b, now))
+          pairs.append((dataset_b, dataset_a, now))  # Symmetric
+
+      if not pairs:
+        return
+
+      # Single transaction: batch insert all pairs
       conn = self._get_connection()
       cursor = conn.cursor()
-
-      cursor.execute(
+      cursor.executemany(
         """
         INSERT INTO co_downloads (dataset_a_id, dataset_b_id, co_download_count, last_occurrence)
         VALUES (?, ?, 1, ?)
@@ -191,13 +199,13 @@ class UserBehaviorTracker:
           co_download_count = co_download_count + 1,
           last_occurrence = excluded.last_occurrence
         """,
-        (dataset_a_id, dataset_b_id, datetime.utcnow()),
+        pairs,
       )
       conn.commit()
     except Exception as e:
       if self._logger:
         self._logger.error(
-          f"Failed to log co-download: {e}",
+          f"Failed to log co-download batch: {e}",
           origin="UserBehaviorTracker",
         )
 
@@ -343,6 +351,42 @@ class UserBehaviorTracker:
           origin="UserBehaviorTracker",
         )
       return []
+
+  def get_search_success_rate(self, days_back: int = 30) -> float:
+    """Compute percentage of searches with ≥1 click."""
+    try:
+      conn = self._get_connection()
+      cursor = conn.cursor()
+
+      cutoff_date = datetime.utcnow() - timedelta(days=days_back)
+
+      # Count searches with at least 1 click
+      cursor.execute(
+        """
+        SELECT COUNT(DISTINCT s.id)
+        FROM searches s
+        INNER JOIN clicks c ON s.id = c.search_id
+        WHERE s.timestamp > ?
+        """,
+        (cutoff_date,),
+      )
+      searches_with_clicks = cursor.fetchone()[0] or 0
+
+      # Count total searches
+      cursor.execute(
+        "SELECT COUNT(*) FROM searches WHERE timestamp > ?",
+        (cutoff_date,),
+      )
+      total_searches = cursor.fetchone()[0] or 1
+
+      return searches_with_clicks / total_searches if total_searches > 0 else 0.0
+    except Exception as e:
+      if self._logger:
+        self._logger.error(
+          f"Failed to compute success rate: {e}",
+          origin="UserBehaviorTracker",
+        )
+      return 0.0
 
   def clear_all(self) -> None:
     """Clear all user behavior data."""

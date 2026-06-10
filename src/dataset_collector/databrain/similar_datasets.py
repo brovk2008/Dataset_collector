@@ -80,8 +80,45 @@ class SimilarDatasetsEngine:
     all_datasets: list[DatasetResult],
     limit: int = 5,
   ) -> dict[str, list[DatasetResult]]:
-    """Batch query for similar datasets."""
-    results = {}
-    for dataset_id in dataset_ids:
-      results[dataset_id] = self.find_similar(dataset_id, all_datasets, limit)
-    return results
+    """Batch query for similar datasets (load embeddings once)."""
+    try:
+      results = {}
+
+      # Load all embeddings once (not per dataset)
+      all_ids = [d.id for d in all_datasets]
+      all_embeddings = self._cache.get_by_ids(all_ids)
+
+      id_to_result = {d.id: d for d in all_datasets}
+
+      # For each requested dataset, compute similarities
+      for dataset_id in dataset_ids:
+        if dataset_id not in all_embeddings:
+          results[dataset_id] = []
+          continue
+
+        target_embedding = all_embeddings[dataset_id]
+        similarities = {}
+
+        # Compute similarities against all others
+        for other_id, other_embedding in all_embeddings.items():
+          if other_id == dataset_id:
+            continue
+          try:
+            distance = cosine(target_embedding, other_embedding)
+            similarity = 1 - distance
+            similarities[other_id] = max(0.0, min(1.0, similarity))
+          except Exception:
+            continue
+
+        # Sort by similarity and return top N
+        sorted_ids = sorted(similarities.items(), key=lambda x: x[1], reverse=True)[:limit]
+        results[dataset_id] = [id_to_result[sid] for sid, _ in sorted_ids if sid in id_to_result]
+
+      return results
+    except Exception as e:
+      if self._logger:
+        self._logger.error(
+          f"Failed to batch find similar: {e}",
+          origin="SimilarDatasetsEngine",
+        )
+      return {did: [] for did in dataset_ids}
