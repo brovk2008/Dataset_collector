@@ -147,15 +147,6 @@ class SettingsPanel(QWidget):
     self._cache_size.setObjectName("secondaryLabel")
     enhanced_form.addRow("Size:", self._cache_size)
 
-    # Buttons in two rows for small screens
-    enhanced_btns1 = QHBoxLayout()
-    self._download_model = QPushButton("Download Model (90 MB)")
-    self._download_model.clicked.connect(self._on_download_model)
-    self._download_model.setMinimumWidth(120)
-    enhanced_btns1.addWidget(self._download_model)
-    enhanced_btns1.addStretch()
-    enhanced_form.addRow("", enhanced_btns1)
-
     enhanced_btns2 = QHBoxLayout()
     self._rebuild_cache = QPushButton("Rebuild Embeddings")
     self._rebuild_cache.clicked.connect(self._on_rebuild_cache)
@@ -264,8 +255,18 @@ class SettingsPanel(QWidget):
       print(f"[SETTINGS] _databrain is None: {self._databrain is None}")
 
     if not hasattr(self, "_databrain") or self._databrain is None:
-      print(f"[SETTINGS] Setting status to 'DatasetBrain not available'")
-      self._enhanced_status.setText("DatasetBrain not available")
+      try:
+        parent_window = self.parent().parent() if self.parent() else None
+        error = getattr(parent_window, '_databrain_error', None) if parent_window else None
+        if error:
+          print(f"[SETTINGS] Showing error from parent: {error}")
+          self._enhanced_status.setText(f"Error: {error}")
+        else:
+          print(f"[SETTINGS] Setting status to 'DatasetBrain not available'")
+          self._enhanced_status.setText("DatasetBrain not available")
+      except Exception as e:
+        print(f"[SETTINGS] Exception getting error: {e}")
+        self._enhanced_status.setText("DatasetBrain not available")
       return
 
     print(f"[SETTINGS] Getting model status...")
@@ -277,72 +278,15 @@ class SettingsPanel(QWidget):
       self._enhanced_status.setText("Installed [OK]")
       size_mb = status.get("size_mb", 90)
       self._model_info.setText(f"all-MiniLM-L6-v2 ({size_mb:.0f} MB)")
-      self._download_model.setEnabled(False)
     else:
       print(f"[SETTINGS] Model not installed, setting status to 'Not installed'")
       self._enhanced_status.setText("Not installed")
       self._model_info.setText("Download to enable semantic search")
-      self._download_model.setEnabled(True)
 
     cache_stats = self._databrain.embeddings_cache.stats()
     print(f"[SETTINGS] Cache stats: {cache_stats}")
     self._cache_size.setText(
       f"Cache: {cache_stats['total_size_mb']:.1f} MB ({cache_stats['total_cached']} datasets)"
-    )
-
-  def _on_download_model(self) -> None:
-    """Download the embedding model in background thread."""
-    if not hasattr(self, "_databrain") or self._databrain is None:
-      from PySide6.QtWidgets import QMessageBox
-      QMessageBox.warning(self, "Error", "DatasetBrain not available")
-      return
-
-    from dataset_collector.ui.workers import ModelDownloadWorker
-
-    self._download_model.setEnabled(False)
-    self._enhanced_status.setText("Downloading model...")
-
-    worker = ModelDownloadWorker(self._databrain.model_manager)
-    worker.progress.connect(
-      lambda msg, pct: self._enhanced_status.setText(f"{msg} ({int(pct)}%)")
-    )
-    worker.finished.connect(
-      lambda success: self._on_model_download_finished(success)
-    )
-    worker.error.connect(
-      lambda err: self._on_model_download_error(err)
-    )
-    worker.start()
-    self._download_worker = worker
-
-  def _on_model_download_finished(self, success: bool) -> None:
-    """Handle model download completion."""
-    from PySide6.QtWidgets import QMessageBox
-
-    if success:
-      self._refresh_enhanced_search_status()
-      QMessageBox.information(
-        self, "Success", "Embedding model downloaded successfully! Semantic search is now enabled."
-      )
-    else:
-      self._enhanced_status.setText("Download failed")
-      self._download_model.setEnabled(True)
-      QMessageBox.warning(
-        self,
-        "Error",
-        "Failed to download model. Check internet connection and try again.",
-      )
-
-  def _on_model_download_error(self, error: str) -> None:
-    """Handle model download error."""
-    from PySide6.QtWidgets import QMessageBox
-
-    self._enhanced_status.setText("Download error")
-    self._download_model.setEnabled(True)
-    QMessageBox.critical(
-      self,
-      "Download Error",
-      f"Failed to download model:\n{error}",
     )
 
   def _on_rebuild_cache(self) -> None:

@@ -15,14 +15,13 @@ SRC = ROOT / "src" / "dataset_collector"
 SEP = ";" if sys.platform == "win32" else ":"
 
 # Keep the bundle lean — avoid pulling optional heavy stacks via pandas hooks.
+# NOTE: scipy and torch are REQUIRED by sentence_transformers for semantic search
 _EXCLUDED_MODULES = (
   "matplotlib",
-  "scipy",
   "IPython",
   "jupyter",
   "notebook",
   "numba",
-  "torch",
   "tensorflow",
   "tensorboard",
   "sklearn",
@@ -55,6 +54,9 @@ def _common_args(*, clean: bool = True) -> list[str]:
     "--hidden-import=yaml",
     "--hidden-import=httpx",
     "--hidden-import=pandas",
+    "--hidden-import=scipy",
+    "--hidden-import=torch",
+    "--hidden-import=sentence_transformers",
     *_exclude_args(),
   ]
   if clean:

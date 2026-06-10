@@ -64,6 +64,7 @@ class MainWindow(QMainWindow):
 
     # Lazy-initialize DatasetBrain (defer heavy imports until needed)
     self._databrain: DatasetBrain | None = None
+    self._databrain_error: str | None = None
 
     # Initialize SearchEngine without DatasetBrain (will be added when DatasetBrain initializes)
     self._search_engine = SearchEngine(config, self._logger, self._creds, databrain=None)
@@ -85,8 +86,28 @@ class MainWindow(QMainWindow):
     self._connect_signals()
 
     print("[MAINWINDOW] Forcing DatasetBrain initialization on startup...")
-    self._get_databrain()
+    try:
+      self._get_databrain()
+    except Exception as e:
+      self._databrain_error = str(e)
+      print(f"[MAINWINDOW] Initialization error (will show dialog): {self._databrain_error}")
+
+    if self._databrain_error:
+      from PySide6.QtCore import QTimer
+      QTimer.singleShot(500, self._show_init_error)
+
     print(f"[MAINWINDOW] DatasetBrain after init: {self._databrain}")
+
+  def _show_init_error(self) -> None:
+    """Show DatasetBrain initialization error dialog."""
+    from PySide6.QtWidgets import QMessageBox
+    if self._databrain_error:
+      QMessageBox.critical(
+        self,
+        "DatasetBrain Initialization Failed",
+        f"Could not initialize semantic search:\n\n{self._databrain_error}\n\n"
+        "Check Settings → Enhanced Search for details."
+      )
 
   def _get_databrain(self) -> DatasetBrain | None:
     """Lazy-initialize DatasetBrain on first access."""
@@ -122,6 +143,7 @@ class MainWindow(QMainWindow):
         print("[DATABRAIN] Initialization complete")
       except Exception as e:
         error_msg = f"Failed to initialize DatasetBrain: {e}"
+        self._databrain_error = error_msg
         print(f"[DATABRAIN ERROR] {error_msg}")
         print("[DATABRAIN] Full traceback:")
         import traceback
