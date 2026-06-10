@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import numpy as np
 from scipy.spatial.distance import cosine
 
 from dataset_collector.core.models import DatasetResult
@@ -33,9 +32,8 @@ class SimilarDatasetsEngine:
       target_embedding = self._cache.get(dataset_id)
       if target_embedding is None:
         if self._logger:
-          self._logger.debug(
+          self._logger.info(
             f"No embedding for {dataset_id}",
-            origin="SimilarDatasetsEngine",
           )
         return []
 
@@ -52,9 +50,8 @@ class SimilarDatasetsEngine:
           similarities[other_id] = max(0.0, min(1.0, similarity))
         except Exception as e:
           if self._logger:
-            self._logger.debug(
+            self._logger.info(
               f"Similarity computation failed for {other_id}: {e}",
-              origin="SimilarDatasetsEngine",
             )
           continue
 

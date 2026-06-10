@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from dataset_collector.core.enums import DownloadStatus
 from dataset_collector.core.models import DownloadTask
 
 

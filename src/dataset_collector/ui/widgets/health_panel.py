@@ -9,7 +9,6 @@ from pathlib import Path
 from PySide6.QtWidgets import (
     QFileDialog,
     QGroupBox,
-    QLabel,
     QPushButton,
     QTextEdit,
     QVBoxLayout,

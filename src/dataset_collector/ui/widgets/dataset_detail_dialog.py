@@ -149,6 +149,7 @@ class DatasetDetailDialog(QDialog):
         pass
 
     layout.addStretch()
+    btn_row = QHBoxLayout()
     btn_row.addStretch()
     select_btn = QPushButton("Select This Dataset")
     select_btn.setObjectName("primaryButton")

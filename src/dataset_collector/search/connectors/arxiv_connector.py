@@ -50,7 +50,7 @@ class ArxivConnector(BaseConnector):
         progress_callback(f"Found {len(results)} papers on arXiv", 100.0)
 
       return results
-    except Exception as e:
+    except Exception:
       # Graceful degradation: return empty list on any error
       return []
 

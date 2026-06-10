@@ -10,10 +10,10 @@ _src = Path(__file__).resolve().parent.parent
 if str(_src) not in sys.path:
   sys.path.insert(0, str(_src))
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from dataset_collector.core.config_manager import ConfigManager
-from dataset_collector.ui.main_window import MainWindow
+from dataset_collector.core.config_manager import ConfigManager  # noqa: E402
+from dataset_collector.ui.main_window import MainWindow  # noqa: E402
 
 
 def main() -> int:

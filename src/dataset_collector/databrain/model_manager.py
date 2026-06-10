@@ -68,7 +68,7 @@ class ModelManager:
 
       # SentenceTransformer will cache to our custom path automatically
       # via SENTENCE_TRANSFORMERS_HOME env var (set via config)
-      model = SentenceTransformer(
+      SentenceTransformer(
         self.MODEL_NAME,
         cache_folder=str(self._cache_dir),
       )

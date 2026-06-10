@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataset_collector.core.models import DatasetResult
 from dataset_collector.databrain.user_behavior import UserBehaviorTracker
 from dataset_collector.logging.logger import AppLogger
-from dataset_collector.search.quality import compute_quality_score
 
 
 class HealthScorer:

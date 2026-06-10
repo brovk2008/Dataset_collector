@@ -87,9 +87,8 @@ class SemanticRanker:
         scores[dataset_id] = max(0.0, min(1.0, similarity))
       except Exception as e:
         if self._logger:
-          self._logger.debug(
+          self._logger.info(
             f"Failed to compute similarity for {dataset_id}: {e}",
-            origin="SemanticRanker",
           )
         scores[dataset_id] = 0.0
 

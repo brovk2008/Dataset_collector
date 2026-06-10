@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 from difflib import SequenceMatcher
 
-from dataset_collector.core.enums import DataSource
 from dataset_collector.core.models import DatasetResult
 
 
@@ -110,9 +109,6 @@ def _merge_group(group: list[DatasetResult]) -> DatasetResult:
   primary = max(group, key=lambda r: (r.relevance_score, r.quality_score))
   sources = list(dict.fromkeys(
     [primary.source.value] + [g.source.value for g in group if g.source != primary.source]
-  ))
-  all_urls = list(dict.fromkeys(
-    u for g in group for u in ([g.url] + g.download_urls) if u
   ))
   primary.available_sources = sources
   primary.metadata["merged_count"] = len(group)

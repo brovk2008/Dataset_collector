@@ -250,7 +250,7 @@ class MainWindow(QMainWindow):
             search_id, dataset.id, rank_position, "table"
           )
     except Exception as e:
-      self._logger.debug(f"Failed to log click: {e}", origin="MainWindow")
+      self._logger.info(f"Failed to log click: {e}")
 
   def _open_donate_page(self) -> None:
     QDesktopServices.openUrl(QUrl(DONATE_URL))
@@ -321,7 +321,7 @@ class MainWindow(QMainWindow):
       try:
         databrain.health_scorer.populate_health_scores(results)
       except Exception as e:
-        self._logger.debug(f"Failed to populate health scores: {e}")
+        self._logger.info(f"Failed to populate health scores: {e}")
 
     self._results_table.set_results(results)
     self._search_panel.set_scanning(False)

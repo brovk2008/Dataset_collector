@@ -1,6 +1,6 @@
 """Enumerations for Dataset_Collector."""
 
-from enum import Enum, auto
+from enum import Enum
 
 
 class DataSource(str, Enum):

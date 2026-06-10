@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 
 import httpx
 from PySide6.QtCore import Signal, Qt

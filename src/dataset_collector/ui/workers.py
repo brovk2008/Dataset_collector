@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Callable
 
 from PySide6.QtCore import QThread, Signal
 
-from dataset_collector.core.models import DatasetResult, DownloadTask, SearchRequest
+from dataset_collector.core.models import DatasetResult, SearchRequest
 from dataset_collector.download.download_engine import DownloadEngine
-from dataset_collector.search.search_engine import SearchEngine
 
 
 class SearchWorker(QThread):
