@@ -170,6 +170,27 @@ class SearchPanel(QWidget):
 
     layout.addWidget(filters_group)
 
+    # Advanced options group
+    advanced_group = QGroupBox("Advanced Options")
+    advanced_layout = QGridLayout(advanced_group)
+    advanced_layout.setHorizontalSpacing(10)
+    advanced_layout.setVerticalSpacing(8)
+    advanced_layout.setColumnStretch(1, 1)
+
+    self._aggressive_check = QCheckBox("Aggressive Search")
+    self._aggressive_check.setToolTip(
+      "Enable query expansion (15-30 terms), multi-stage search, and all sources"
+    )
+    advanced_layout.addWidget(self._aggressive_check, 0, 0, 1, 2)
+
+    advanced_layout.addWidget(QLabel("Results Per Source:"), 1, 0)
+    self._results_limit_combo = QComboBox()
+    self._results_limit_combo.addItems(["100 (Default)", "250", "500", "1000", "Unlimited"])
+    self._results_limit_combo.setCurrentIndex(0)
+    advanced_layout.addWidget(self._results_limit_combo, 1, 1)
+
+    layout.addWidget(advanced_group)
+
     btn_layout = QHBoxLayout()
     btn_layout.addStretch()
     self._scan_btn = QPushButton("Start Scan")
@@ -266,7 +287,20 @@ class SearchPanel(QWidget):
       max_size_bytes=max_size,
       license_filter=LicenseFilter(self._license_combo.currentText()),
     )
-    return SearchRequest(query=query, sources=sources, filters=filters)
+
+    # Parse result limit
+    limit_text = self._results_limit_combo.currentText()
+    max_results = None
+    if "Unlimited" not in limit_text:
+      max_results = int(limit_text.split()[0])
+
+    return SearchRequest(
+      query=query,
+      sources=sources,
+      filters=filters,
+      aggressive_mode=self._aggressive_check.isChecked(),
+      max_results_per_source=max_results,
+    )
 
   def get_budget_bytes(self) -> int | None:
     if self._size_combo.currentText() == SizeFilter.MAX_SIZE.value:

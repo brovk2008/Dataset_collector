@@ -81,6 +81,253 @@ class SearchEngine:
   def cancel(self) -> None:
     self._cancelled = True
 
+  async def search_multi_stage(
+    self,
+    request: SearchRequest,
+    all_datasets: list[DatasetResult] | None = None,
+    progress_callback: Callable[[str, float], None] | None = None,
+    result_callback: Callable[[DatasetResult], None] | None = None,
+  ) -> list[DatasetResult]:
+    """Multi-stage search with query expansion for maximum recall."""
+    self._cancelled = False
+    all_results: dict[str, DatasetResult] = {}
+
+    try:
+      # Stage 1: Original query
+      if progress_callback:
+        progress_callback("Stage 1/5: Searching original query...", 15.0)
+
+      stage1_results = await self.search(request, None, result_callback)
+      for result in stage1_results:
+        if result.id not in all_results:
+          all_results[result.id] = result
+
+      if self._cancelled:
+        return list(all_results.values())
+
+      # Stage 2: Expanded terms (if DatasetBrain available)
+      if self._databrain and self._databrain.enabled:
+        if progress_callback:
+          progress_callback("Stage 2/5: Searching expanded terms...", 35.0)
+
+        try:
+          expanded = self._databrain.query_expansion.expand_query_aggressive(
+            request.query,
+            all_datasets=all_datasets,
+            max_expansions=15,
+          )
+          expanded_terms = expanded.get("all_terms", [])[1:]  # Skip original
+
+          for term in expanded_terms:
+            if self._cancelled:
+              break
+
+            expanded_request = SearchRequest(
+              query=term,
+              sources=request.sources,
+              filters=request.filters,
+              aggressive_mode=False,
+              max_results_per_source=50,
+            )
+
+            expanded_results = await self.search(expanded_request, None, result_callback)
+            for result in expanded_results:
+              if result.id not in all_results:
+                all_results[result.id] = result
+        except Exception as e:
+          self._logger.error(f"Stage 2 expansion failed: {e}")
+
+      if self._cancelled:
+        return list(all_results.values())
+
+      # Stage 3: Category-related terms
+      if progress_callback:
+        progress_callback("Stage 3/5: Searching category terms...", 55.0)
+
+      category_terms = self._get_category_terms(request.query)
+      for term in category_terms:
+        if self._cancelled:
+          break
+
+        category_request = SearchRequest(
+          query=term,
+          sources=request.sources,
+          filters=request.filters,
+          aggressive_mode=False,
+          max_results_per_source=30,
+        )
+
+        category_results = await self.search(category_request, None, result_callback)
+        for result in category_results:
+          if result.id not in all_results:
+            all_results[result.id] = result
+
+      if self._cancelled:
+        return list(all_results.values())
+
+      # Stage 4: User behavior (if aggressive mode)
+      if progress_callback:
+        progress_callback("Stage 4/5: Searching behavior patterns...", 70.0)
+
+      if request.aggressive_mode and self._databrain:
+        try:
+          behavior_terms = self._databrain.behavior_tracker.get_related_searches(
+            request.query,
+            limit=5,
+          )
+          for term in behavior_terms:
+            if self._cancelled:
+              break
+
+            behavior_request = SearchRequest(
+              query=term,
+              sources=request.sources,
+              filters=request.filters,
+              aggressive_mode=False,
+              max_results_per_source=25,
+            )
+
+            behavior_results = await self.search(behavior_request, None, result_callback)
+            for result in behavior_results:
+              if result.id not in all_results:
+                all_results[result.id] = result
+        except Exception as e:
+          self._logger.error(f"Stage 4 behavior search failed: {e}")
+
+      if self._cancelled:
+        return list(all_results.values())
+
+      # Stage 5: Semantic similarity (if DatasetBrain available)
+      if progress_callback:
+        progress_callback("Stage 5/5: Finding semantic matches...", 85.0)
+
+      if self._databrain and self._databrain.enabled and all_datasets:
+        try:
+          encoder = self._databrain.model_manager.get_encoder()
+          query_embedding = encoder.encode(request.query, convert_to_numpy=True)
+
+          similar_datasets = self._find_semantic_similar(
+            query_embedding,
+            all_datasets,
+            limit=20,
+          )
+
+          for result in similar_datasets:
+            if result.id not in all_results:
+              all_results[result.id] = result
+              if result_callback:
+                result_callback(result)
+        except Exception as e:
+          self._logger.error(f"Stage 5 semantic search failed: {e}")
+
+      # Final ranking
+      if progress_callback:
+        progress_callback("Finalizing results...", 95.0)
+
+      final_results = list(all_results.values())
+      merged = merge_duplicates(final_results)
+
+      if self._databrain and self._databrain.enabled:
+        try:
+          if self._databrain.semantic_ranker is None:
+            from dataset_collector.databrain.semantic_ranker import SemanticRanker
+            self._databrain.semantic_ranker = SemanticRanker(
+              self._databrain.model_manager,
+              self._databrain.embeddings_cache,
+              self._logger,
+            )
+
+          merged = self._databrain.semantic_ranker.score_results(request.query, merged)
+        except Exception as e:
+          self._logger.error(f"Final semantic scoring failed: {e}")
+
+      ranked = rank_results(request.query, merged, use_hybrid=self._databrain is not None)
+
+      # Limit results per source if specified
+      if request.max_results_per_source:
+        ranked = self._limit_results_per_source(ranked, request.max_results_per_source)
+
+      if progress_callback:
+        progress_callback(f"Search complete: {len(ranked)} relevant datasets found", 100.0)
+
+      return ranked
+
+    except Exception as e:
+      self._logger.error(f"Multi-stage search failed: {e}")
+      return []
+
+  def _get_category_terms(self, query: str) -> list[str]:
+    """Extract category-specific terms from query."""
+    try:
+      from dataset_collector.databrain.query_expansion import CATEGORY_PATTERNS
+    except ImportError:
+      return []
+
+    category_terms = []
+    query_lower = query.lower()
+
+    for category, patterns in CATEGORY_PATTERNS.items():
+      if any(pattern in query_lower for pattern in patterns):
+        if category == "text":
+          category_terms.extend(["corpus", "nlp dataset", "language data"])
+        elif category == "image":
+          category_terms.extend(["vision dataset", "visual data", "photography"])
+        elif category == "audio":
+          category_terms.extend(["audio dataset", "sound data", "music"])
+        elif category == "video":
+          category_terms.extend(["video dataset", "motion data"])
+
+    return category_terms[:5]
+
+  def _find_semantic_similar(
+    self,
+    query_embedding,
+    datasets: list[DatasetResult],
+    limit: int = 20,
+  ) -> list[DatasetResult]:
+    """Find semantically similar datasets."""
+    try:
+      from scipy.spatial.distance import cosine
+
+      similarities: list[tuple[float, DatasetResult]] = []
+
+      dataset_ids = [d.id for d in datasets]
+      embeddings = self._databrain.embeddings_cache.get_by_ids(dataset_ids)
+
+      for dataset in datasets:
+        if dataset.id in embeddings:
+          embedding = embeddings[dataset.id]
+          distance = cosine(query_embedding, embedding)
+          similarity = 1 - distance
+          if similarity > 0.6:
+            similarities.append((similarity, dataset))
+
+      similarities.sort(key=lambda x: x[0], reverse=True)
+      return [d for _, d in similarities[:limit]]
+    except Exception as e:
+      self._logger.error(f"Semantic similarity search failed: {e}")
+      return []
+
+  def _limit_results_per_source(
+    self,
+    results: list[DatasetResult],
+    max_per_source: int,
+  ) -> list[DatasetResult]:
+    """Limit results to max_per_source per DataSource."""
+    source_counts: dict[str, int] = {}
+    limited = []
+
+    for result in results:
+      source_key = result.source.value
+      if source_key not in source_counts:
+        source_counts[source_key] = 0
+
+      if source_counts[source_key] < max_per_source:
+        limited.append(result)
+        source_counts[source_key] += 1
+
+    return limited
+
   async def search(
     self,
     request: SearchRequest,

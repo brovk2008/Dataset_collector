@@ -33,14 +33,33 @@ class SearchWorker(QThread):
       loop = asyncio.new_event_loop()
       asyncio.set_event_loop(loop)
 
-      # NEW: Pass callback to emit results as they arrive
-      results = loop.run_until_complete(
-        self._engine.search(
-          self._request,
-          progress_callback=lambda msg, pct: self.progress.emit(msg, pct),
-          result_callback=self._on_result_received,  # NEW
+      # Use multi-stage search if aggressive mode enabled
+      if self._request.aggressive_mode:
+        # For multi-stage search, we need all datasets
+        all_datasets = None
+        if hasattr(self._engine, '_databrain') and self._engine._databrain:
+          try:
+            all_datasets = self._engine._databrain.get_all_datasets()
+          except Exception:
+            pass
+
+        results = loop.run_until_complete(
+          self._engine.search_multi_stage(
+            self._request,
+            all_datasets=all_datasets,
+            progress_callback=lambda msg, pct: self.progress.emit(msg, pct),
+            result_callback=self._on_result_received,
+          )
         )
-      )
+      else:
+        # Standard single-pass search
+        results = loop.run_until_complete(
+          self._engine.search(
+            self._request,
+            progress_callback=lambda msg, pct: self.progress.emit(msg, pct),
+            result_callback=self._on_result_received,
+          )
+        )
       loop.close()
 
       if not self._cancelled:

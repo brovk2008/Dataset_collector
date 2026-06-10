@@ -31,6 +31,8 @@ class SearchRequest:
     query: str
     sources: list[DataSource]
     filters: SearchFilters = field(default_factory=SearchFilters)
+    aggressive_mode: bool = False
+    max_results_per_source: int | None = None
 
 
 @dataclass
