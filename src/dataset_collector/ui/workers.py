@@ -104,3 +104,22 @@ class AnalysisWorker(QThread):
       self.finished.emit(profile)
     except Exception as e:
       self.error.emit(str(e))
+
+
+class ModelDownloadWorker(QThread):
+  progress = Signal(str, float)
+  finished = Signal(bool)
+  error = Signal(str)
+
+  def __init__(self, model_manager) -> None:
+    super().__init__()
+    self._model_manager = model_manager
+
+  def run(self) -> None:
+    try:
+      success = self._model_manager.download_model(
+        progress_callback=lambda msg, pct: self.progress.emit(msg, pct)
+      )
+      self.finished.emit(success)
+    except Exception as e:
+      self.error.emit(str(e))

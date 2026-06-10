@@ -19,3 +19,4 @@ Thumbs.db
 test_logs/
 test_manifests/
 _probe_*.py
+PHASE_*.md

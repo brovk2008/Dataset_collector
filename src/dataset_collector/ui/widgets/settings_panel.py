@@ -264,31 +264,59 @@ class SettingsPanel(QWidget):
     )
 
   def _on_download_model(self) -> None:
-    """Download the embedding model."""
-    if not hasattr(self, "_databrain"):
+    """Download the embedding model in background thread."""
+    if not hasattr(self, "_databrain") or self._databrain is None:
+      from PySide6.QtWidgets import QMessageBox
       QMessageBox.warning(self, "Error", "DatasetBrain not available")
       return
 
+    from dataset_collector.ui.workers import ModelDownloadWorker
+
     self._download_model.setEnabled(False)
-    self._enhanced_status.setText("Downloading...")
+    self._enhanced_status.setText("Downloading model...")
 
-    def progress_callback(msg: str, pct: float) -> None:
-      self._enhanced_status.setText(f"{msg} {int(pct)}%")
+    worker = ModelDownloadWorker(self._databrain.model_manager)
+    worker.progress.connect(
+      lambda msg, pct: self._enhanced_status.setText(f"{msg} ({int(pct)}%)")
+    )
+    worker.finished.connect(
+      lambda success: self._on_model_download_finished(success)
+    )
+    worker.error.connect(
+      lambda err: self._on_model_download_error(err)
+    )
+    worker.start()
+    self._download_worker = worker
 
-    success = self._databrain.model_manager.download_model(progress_callback)
+  def _on_model_download_finished(self, success: bool) -> None:
+    """Handle model download completion."""
+    from PySide6.QtWidgets import QMessageBox
 
     if success:
       self._refresh_enhanced_search_status()
       QMessageBox.information(
-        self, "Success", "Embedding model downloaded successfully!"
+        self, "Success", "Embedding model downloaded successfully! Semantic search is now enabled."
       )
     else:
       self._enhanced_status.setText("Download failed")
+      self._download_model.setEnabled(True)
       QMessageBox.warning(
         self,
         "Error",
         "Failed to download model. Check internet connection and try again.",
       )
+
+  def _on_model_download_error(self, error: str) -> None:
+    """Handle model download error."""
+    from PySide6.QtWidgets import QMessageBox
+
+    self._enhanced_status.setText("Download error")
+    self._download_model.setEnabled(True)
+    QMessageBox.critical(
+      self,
+      "Download Error",
+      f"Failed to download model:\n{error}",
+    )
 
   def _on_rebuild_cache(self) -> None:
     """Rebuild embeddings cache."""
