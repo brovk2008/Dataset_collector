@@ -79,6 +79,7 @@ class SearchEngine:
     self,
     request: SearchRequest,
     progress_callback: Callable[[str, float], None] | None = None,
+    result_callback: Callable[[DatasetResult], None] | None = None,  # NEW
   ) -> list[DatasetResult]:
     self._cancelled = False
     max_per_source = self._config.get("search", "max_results_per_source", default=100)
@@ -111,6 +112,7 @@ class SearchEngine:
         max_per_source,
         make_callback(si, total_sources),
         delay_seconds=si * rate_delay,
+        result_callback=result_callback,  # NEW: Pass result callback
       )
       search_tasks.append(task)
 
@@ -184,6 +186,7 @@ class SearchEngine:
     max_results: int,
     progress_callback: Callable[[str, float], None] | None = None,
     delay_seconds: float = 0.0,
+    result_callback: Callable[[DatasetResult], None] | None = None,  # NEW
   ) -> list[DatasetResult]:
     """Search a single source with optional delay for rate limiting."""
     try:
@@ -200,6 +203,12 @@ class SearchEngine:
         max_results=max_results,
         progress_callback=progress_callback,
       )
+
+      # NEW: Emit each result immediately for streaming
+      if result_callback and results:
+        for result in results:
+          result_callback(result)
+
       return results or []
     except Exception as e:
       self._logger.error(f"Search failed for {source.value}: {e}")

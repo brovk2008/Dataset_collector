@@ -219,7 +219,8 @@ class MainWindow(QMainWindow):
     self._status_bar.showMessage("Ready")
 
   def _connect_signals(self) -> None:
-    self._search_panel.scan_button.clicked.connect(self._on_scan)
+    self._search_panel.scan_requested.connect(self._on_scan)
+    self._search_panel.cancel_requested.connect(self._on_cancel_scan)
     self._results_table.selection_changed.connect(self._on_selection_changed)
     self._results_table.dataset_activated.connect(self._on_dataset_details)
     self._download_panel.download_clicked.connect(self._on_download)
@@ -262,19 +263,36 @@ class MainWindow(QMainWindow):
     self._scan_progress.setVisible(True)
     self._scan_status.setVisible(True)
     self._scan_progress.setValue(0)
-    self._scan_status.setText("Scanning sources...")
+    self._scan_status.setText("Searching sources...")
     self._status_bar.showMessage("Scanning...")
+    self._results_table.set_results([])  # Clear old results for new search
 
     self._search_worker = SearchWorker(self._search_engine, request)
     self._search_worker.progress.connect(self._on_scan_progress)
+    self._search_worker.result_received.connect(self._on_result_received)  # NEW: Stream results
     self._search_worker.finished.connect(self._on_scan_finished)
     self._search_worker.error.connect(self._on_scan_error)
     self._search_worker.start()
+
+  def _on_cancel_scan(self) -> None:
+    if self._search_worker and self._search_worker.isRunning():
+      self._search_worker.cancel()
+      self._search_panel.set_scanning(False)
+      self._scan_progress.setVisible(False)
+      self._scan_status.setText("Search cancelled")
+      self._status_bar.showMessage("Search cancelled")
 
   def _on_scan_progress(self, message: str, percent: float) -> None:
     self._scan_progress.setValue(int(percent))
     self._scan_status.setText(message)
     self._status_bar.showMessage(message)
+
+  def _on_result_received(self, result) -> None:
+    """NEW: Add result to table as it arrives (real-time streaming)."""
+    self._results_table.add_result(result)
+    count = len(self._results_table._all_results)
+    self._scan_status.setText(f"Scanning sources... {count} results found")
+    self._status_bar.showMessage(f"Found {count} datasets so far")
 
   def _on_scan_finished(self, results: list) -> None:
     self._results = results

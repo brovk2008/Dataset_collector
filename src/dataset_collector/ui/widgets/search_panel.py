@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -26,8 +26,12 @@ from dataset_collector.core.models import SearchFilters, SearchRequest
 class SearchPanel(QWidget):
   """Query input, source selection, and filter controls."""
 
+  scan_requested = Signal()  # Emitted when "Start Scan" clicked
+  cancel_requested = Signal()  # Emitted when "Stop Scan" clicked
+
   def __init__(self, parent: QWidget | None = None) -> None:
     super().__init__(parent)
+    self._scanning = False
     self._build_ui()
 
   def _build_ui(self) -> None:
@@ -172,6 +176,7 @@ class SearchPanel(QWidget):
     self._scan_btn.setObjectName("primaryButton")
     self._scan_btn.setMinimumWidth(140)
     self._scan_btn.setMinimumHeight(32)
+    self._scan_btn.clicked.connect(self._on_scan_btn_clicked)
     btn_layout.addWidget(self._scan_btn)
     layout.addLayout(btn_layout)
 
@@ -262,10 +267,18 @@ class SearchPanel(QWidget):
       return self._max_size_spin.value() * multiplier
     return None
 
+  def _on_scan_btn_clicked(self) -> None:
+    if not self._scanning:
+      self.scan_requested.emit()
+    else:
+      self.cancel_requested.emit()
+
   @property
   def scan_button(self) -> QPushButton:
     return self._scan_btn
 
   def set_scanning(self, scanning: bool) -> None:
-    self._scan_btn.setEnabled(not scanning)
+    self._scanning = scanning
+    self._scan_btn.setText("Stop Scan" if scanning else "Start Scan")
+    self._scan_btn.setEnabled(True)
     self._query_input.setEnabled(not scanning)

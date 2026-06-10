@@ -14,28 +14,49 @@ from dataset_collector.search.search_engine import SearchEngine
 
 class SearchWorker(QThread):
   progress = Signal(str, float)
+  result_received = Signal(object)  # NEW: Stream results as they arrive
   finished = Signal(list)
   error = Signal(str)
 
-  def __init__(self, engine: SearchEngine, request: SearchRequest) -> None:
+  def __init__(self, search_engine, request: SearchRequest) -> None:
     super().__init__()
-    self._engine = engine
+    self._engine = search_engine
     self._request = request
+    self._all_results = []
+    self._cancelled = False
+
+  def cancel(self) -> None:
+    """Request cancellation of the search."""
+    self._cancelled = True
+    self._engine.cancel()
 
   def run(self) -> None:
     try:
       loop = asyncio.new_event_loop()
       asyncio.set_event_loop(loop)
+
+      # NEW: Pass callback to emit results as they arrive
       results = loop.run_until_complete(
         self._engine.search(
           self._request,
           progress_callback=lambda msg, pct: self.progress.emit(msg, pct),
+          result_callback=self._on_result_received,  # NEW
         )
       )
       loop.close()
-      self.finished.emit(results)
+
+      if not self._cancelled:
+        self.finished.emit(results)
     except Exception as e:
-      self.error.emit(str(e))
+      if not self._cancelled:
+        self.error.emit(str(e))
+
+  def _on_result_received(self, result) -> None:
+    """Called when a single result arrives from any source."""
+    if self._cancelled:
+      return
+    self._all_results.append(result)
+    self.result_received.emit(result)
 
 
 class DownloadWorker(QThread):

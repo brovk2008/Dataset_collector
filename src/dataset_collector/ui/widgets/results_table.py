@@ -158,6 +158,16 @@ class ResultsTable(QWidget):
     self._apply_filter_internal()
     self._update_stats()
 
+  def add_result(self, result: DatasetResult) -> None:
+    """Add a single result to the table (for real-time streaming)."""
+    if result.id in self._id_map:
+      return  # Skip duplicates
+
+    self._all_results.append(result)
+    self._id_map[result.id] = result
+    self._apply_filter_internal()
+    self._update_stats()
+
   def apply_budget_suggestions(self, budget_bytes: int) -> int:
     self._checked_ids.clear()
     suggested = suggest_within_budget(self._all_results, budget_bytes)
