@@ -10,6 +10,7 @@ from dataset_collector.core.enums import DataSource
 from dataset_collector.core.models import DatasetResult, SearchRequest
 from dataset_collector.logging.logger import AppLogger
 from dataset_collector.search.connectors import (
+    ArxivConnector,
     BaseConnector,
     GitHubConnector,
     GoogleDatasetConnector,
@@ -66,6 +67,7 @@ class SearchEngine:
       DataSource.RESEARCH_PAPERS: ResearchPapersConnector(),
       DataSource.INTERNET_ARCHIVE: InternetArchiveConnector(),
       DataSource.GOOGLE_DATASET: GoogleDatasetConnector(),
+      DataSource.ARXIV: ArxivConnector(),
     }
 
   def register_connector(self, source: DataSource, connector: BaseConnector) -> None:

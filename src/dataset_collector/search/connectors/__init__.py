@@ -1,5 +1,6 @@
 """Source connector plugins."""
 
+from dataset_collector.search.connectors.arxiv_connector import ArxivConnector
 from dataset_collector.search.connectors.base import BaseConnector
 from dataset_collector.search.connectors.github_connector import GitHubConnector
 from dataset_collector.search.connectors.google_dataset_connector import GoogleDatasetConnector
@@ -11,6 +12,7 @@ from dataset_collector.search.connectors.research_connector import ResearchConne
 from dataset_collector.search.connectors.research_papers_connector import ResearchPapersConnector
 
 __all__ = [
+    "ArxivConnector",
     "BaseConnector",
     "GitHubConnector",
     "GoogleDatasetConnector",
