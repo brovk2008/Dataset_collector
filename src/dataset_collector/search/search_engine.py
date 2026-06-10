@@ -24,7 +24,7 @@ from dataset_collector.search.connectors import (
     ResearchPapersConnector,
 )
 from dataset_collector.core.credential_store import CredentialStore
-from dataset_collector.search.dedup import merge_duplicates
+from dataset_collector.search.dedup import merge_duplicates, merge_duplicates_with_semantic
 from dataset_collector.search.relevance import rank_results
 
 
@@ -225,7 +225,19 @@ class SearchEngine:
         progress_callback("Finalizing results...", 95.0)
 
       final_results = list(all_results.values())
-      merged = merge_duplicates(final_results)
+
+      # Use semantic deduplication if DatasetBrain available
+      if self._databrain and self._databrain.enabled:
+        try:
+          embeddings = self._databrain.embeddings_cache.get_by_ids(
+            [r.id for r in final_results]
+          )
+          merged = merge_duplicates_with_semantic(final_results, embeddings)
+        except Exception as e:
+          self._logger.error(f"Semantic deduplication failed, using traditional: {e}")
+          merged = merge_duplicates(final_results)
+      else:
+        merged = merge_duplicates(final_results)
 
       if self._databrain and self._databrain.enabled:
         try:
@@ -383,8 +395,18 @@ class SearchEngine:
       if result:
         all_results.extend(cast(list[DatasetResult], result))
 
-    # Merge cross-source duplicates, then score and rank
-    merged = merge_duplicates(all_results)
+    # Merge cross-source duplicates with semantic similarity if available
+    if self._databrain and self._databrain.enabled:
+      try:
+        embeddings = self._databrain.embeddings_cache.get_by_ids(
+          [r.id for r in all_results]
+        )
+        merged = merge_duplicates_with_semantic(all_results, embeddings)
+      except Exception as e:
+        self._logger.error(f"Semantic deduplication failed, using traditional: {e}")
+        merged = merge_duplicates(all_results)
+    else:
+      merged = merge_duplicates(all_results)
 
     # Compute semantic scores if DatasetBrain is available
     if self._databrain and self._databrain.enabled:

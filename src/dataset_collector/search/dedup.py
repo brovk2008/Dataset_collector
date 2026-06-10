@@ -4,8 +4,12 @@ from __future__ import annotations
 
 import re
 from difflib import SequenceMatcher
+from typing import TYPE_CHECKING
 
 from dataset_collector.core.models import DatasetResult
+
+if TYPE_CHECKING:
+  import numpy as np
 
 
 def _normalize_name(name: str) -> str:
@@ -124,3 +128,98 @@ def _merge_group(group: list[DatasetResult]) -> DatasetResult:
         primary.estimated_size_bytes = g.estimated_size_bytes
         break
   return primary
+
+
+def find_semantic_duplicates(
+  results: list[DatasetResult],
+  embeddings: dict[str, np.ndarray],
+  threshold: float = 0.75,
+) -> list[tuple[int, int, float]]:
+  """Find semantically similar dataset pairs using embeddings.
+
+  Returns list of (idx1, idx2, similarity_score) tuples where similarity >= threshold.
+  """
+  try:
+    from scipy.spatial.distance import cosine
+  except ImportError:
+    return []
+
+  duplicates = []
+
+  for i, result_a in enumerate(results):
+    if result_a.id not in embeddings:
+      continue
+
+    embedding_a = embeddings[result_a.id]
+
+    for j in range(i + 1, len(results)):
+      result_b = results[j]
+      if result_b.id not in embeddings:
+        continue
+
+      embedding_b = embeddings[result_b.id]
+
+      try:
+        distance = cosine(embedding_a, embedding_b)
+        similarity = 1 - distance
+        if similarity >= threshold:
+          duplicates.append((i, j, similarity))
+      except Exception:
+        continue
+
+  return duplicates
+
+
+def merge_duplicates_with_semantic(
+  results: list[DatasetResult],
+  embeddings: dict[str, float] | None = None,
+  threshold: float = 0.82,
+  semantic_threshold: float = 0.75,
+) -> list[DatasetResult]:
+  """Merge duplicates using both traditional + semantic matching.
+
+  First applies traditional deduplication (URL, name, DOI), then adds
+  semantic similarity matching if embeddings available.
+  """
+  # First pass: traditional deduplication
+  merged = merge_duplicates(results, threshold=threshold)
+
+  # Second pass: semantic deduplication (if embeddings available)
+  if embeddings:
+    try:
+      semantic_dups = find_semantic_duplicates(merged, embeddings, semantic_threshold)
+
+      if semantic_dups:
+        # Build groups from semantic matches
+        used: set[int] = set()
+        final_merged: list[DatasetResult] = []
+
+        for i, result in enumerate(merged):
+          if i in used:
+            continue
+
+          group = [i]
+          used.add(i)
+
+          # Find all items semantically similar to this one
+          for j, k, _sim in semantic_dups:
+            if j == i and k not in used:
+              group.append(k)
+              used.add(k)
+            elif k == i and j not in used:
+              group.append(j)
+              used.add(j)
+
+          # Merge group
+          group_results = [merged[idx] for idx in group]
+          if len(group_results) == 1:
+            final_merged.append(group_results[0])
+          else:
+            final_merged.append(_merge_group(group_results))
+
+        return final_merged
+    except Exception:
+      # If semantic dedup fails, return traditional results
+      pass
+
+  return merged
