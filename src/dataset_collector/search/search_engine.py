@@ -241,14 +241,6 @@ class SearchEngine:
 
       if self._databrain and self._databrain.enabled:
         try:
-          if self._databrain.semantic_ranker is None:
-            from dataset_collector.databrain.semantic_ranker import SemanticRanker
-            self._databrain.semantic_ranker = SemanticRanker(
-              self._databrain.model_manager,
-              self._databrain.embeddings_cache,
-              self._logger,
-            )
-
           merged = self._databrain.semantic_ranker.score_results(request.query, merged)
         except Exception as e:
           self._logger.error(f"Final semantic scoring failed: {e}")
@@ -298,6 +290,9 @@ class SearchEngine:
     limit: int = 20,
   ) -> list[DatasetResult]:
     """Find semantically similar datasets."""
+    if not self._databrain:
+      return []
+
     try:
       from scipy.spatial.distance import cosine
 

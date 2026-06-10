@@ -243,12 +243,12 @@ class SettingsPanel(QWidget):
     if databrain:
       print(f"[SETTINGS] DatasetBrain received, enabled={databrain.enabled}")
     else:
-      print(f"[SETTINGS] DatasetBrain is None")
+      print("[SETTINGS] DatasetBrain is None")
     self._refresh_enhanced_search_status()
 
   def _refresh_enhanced_search_status(self) -> None:
     """Update Enhanced Search UI with current status."""
-    print(f"[SETTINGS] _refresh_enhanced_search_status called")
+    print("[SETTINGS] _refresh_enhanced_search_status called")
     print(f"[SETTINGS] Has _databrain attr: {hasattr(self, '_databrain')}")
     if hasattr(self, "_databrain"):
       print(f"[SETTINGS] _databrain value: {self._databrain}")
@@ -262,24 +262,24 @@ class SettingsPanel(QWidget):
           print(f"[SETTINGS] Showing error from parent: {error}")
           self._enhanced_status.setText(f"Error: {error}")
         else:
-          print(f"[SETTINGS] Setting status to 'DatasetBrain not available'")
+          print("[SETTINGS] Setting status to 'DatasetBrain not available'")
           self._enhanced_status.setText("DatasetBrain not available")
       except Exception as e:
         print(f"[SETTINGS] Exception getting error: {e}")
         self._enhanced_status.setText("DatasetBrain not available")
       return
 
-    print(f"[SETTINGS] Getting model status...")
+    print("[SETTINGS] Getting model status...")
     status = self._databrain.model_manager.get_model_status()
     print(f"[SETTINGS] Model status: {status}")
 
     if status["installed"]:
-      print(f"[SETTINGS] Model installed, setting status to 'Installed [OK]'")
+      print("[SETTINGS] Model installed, setting status to 'Installed [OK]'")
       self._enhanced_status.setText("Installed [OK]")
       size_mb = status.get("size_mb", 90)
       self._model_info.setText(f"all-MiniLM-L6-v2 ({size_mb:.0f} MB)")
     else:
-      print(f"[SETTINGS] Model not installed, setting status to 'Not installed'")
+      print("[SETTINGS] Model not installed, setting status to 'Not installed'")
       self._enhanced_status.setText("Not installed")
       self._model_info.setText("Download to enable semantic search")
 
