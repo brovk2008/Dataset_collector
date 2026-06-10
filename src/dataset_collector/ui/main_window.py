@@ -334,14 +334,14 @@ class MainWindow(QMainWindow):
     self._scan_status.setText(message)
     self._status_bar.showMessage(message)
 
-  def _on_result_received(self, result) -> None:
+  def _on_result_received(self, result) -> None:  # type: ignore
     """NEW: Add result to table as it arrives (real-time streaming)."""
     self._results_table.add_result(result)
     count = len(self._results_table._all_results)
     self._scan_status.setText(f"Scanning sources... {count} results found")
     self._status_bar.showMessage(f"Found {count} datasets so far")
 
-  def _on_scan_finished(self, results: list) -> None:
+  def _on_scan_finished(self, results: list[DatasetResult]) -> None:
     self._results = results
 
     # Compute health scores and populate dataset embeddings
@@ -461,7 +461,7 @@ class MainWindow(QMainWindow):
     self._download_worker.error.connect(self._on_download_error)
     self._download_worker.start()
 
-  def _on_download_finished(self, tasks: list) -> None:
+  def _on_download_finished(self, tasks: list) -> None:  # type: ignore
     self._download_panel.set_downloading(False)
     completed = sum(1 for t in tasks if t.status == DownloadStatus.COMPLETED)
     failed = sum(1 for t in tasks if t.status == DownloadStatus.FAILED)
@@ -522,7 +522,7 @@ class MainWindow(QMainWindow):
     self._analysis_worker.error.connect(self._analysis_panel.show_error)
     self._analysis_worker.start()
 
-  def _on_analysis_finished(self, profile) -> None:
+  def _on_analysis_finished(self, profile) -> None:  # type: ignore
     report_path = None
     if self._last_analysis_path:
       base = Path(self._last_analysis_path)

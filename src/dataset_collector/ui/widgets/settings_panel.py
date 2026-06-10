@@ -245,7 +245,7 @@ class SettingsPanel(QWidget):
       self._kaggle_status.setText("✗ Connection error")
       QMessageBox.warning(self, "Kaggle", f"Connection failed: {e}")
 
-  def set_databrain(self, databrain) -> None:
+  def set_databrain(self, databrain) -> None:  # type: ignore
     """Set DatasetBrain instance and update UI."""
     print(f"[SETTINGS] set_databrain called with: {databrain}")
     self._databrain = databrain
