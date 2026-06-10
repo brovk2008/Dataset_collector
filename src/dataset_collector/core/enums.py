@@ -13,6 +13,7 @@ class DataSource(str, Enum):
     INTERNET_ARCHIVE = "Internet Archive"
     GOOGLE_DATASET = "Google Dataset Search"
     ARXIV = "arXiv"
+    BIORXIV = "bioRxiv/medRxiv"
 
 
 class FileType(str, Enum):

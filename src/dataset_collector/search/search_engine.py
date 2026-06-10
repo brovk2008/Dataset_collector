@@ -12,6 +12,7 @@ from dataset_collector.logging.logger import AppLogger
 from dataset_collector.search.connectors import (
     ArxivConnector,
     BaseConnector,
+    BiorxivConnector,
     GitHubConnector,
     GoogleDatasetConnector,
     GovernmentConnector,
@@ -68,6 +69,7 @@ class SearchEngine:
       DataSource.INTERNET_ARCHIVE: InternetArchiveConnector(),
       DataSource.GOOGLE_DATASET: GoogleDatasetConnector(),
       DataSource.ARXIV: ArxivConnector(),
+      DataSource.BIORXIV: BiorxivConnector(),
     }
 
   def register_connector(self, source: DataSource, connector: BaseConnector) -> None:

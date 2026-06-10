@@ -2,6 +2,7 @@
 
 from dataset_collector.search.connectors.arxiv_connector import ArxivConnector
 from dataset_collector.search.connectors.base import BaseConnector
+from dataset_collector.search.connectors.biorxiv_connector import BiorxivConnector
 from dataset_collector.search.connectors.github_connector import GitHubConnector
 from dataset_collector.search.connectors.google_dataset_connector import GoogleDatasetConnector
 from dataset_collector.search.connectors.government_connector import GovernmentConnector
@@ -14,6 +15,7 @@ from dataset_collector.search.connectors.research_papers_connector import Resear
 __all__ = [
     "ArxivConnector",
     "BaseConnector",
+    "BiorxivConnector",
     "GitHubConnector",
     "GoogleDatasetConnector",
     "GovernmentConnector",
