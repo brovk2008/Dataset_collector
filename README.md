@@ -33,6 +33,36 @@ No Python installation required — download a release for your platform.
 
 ---
 
+## What's New in v2.4.5 — Auto-Initialize DatasetBrain & Dependency Bundling
+
+### ✨ Major Improvements
+
+**Auto-Download on Startup (Zero Configuration)**
+- DatasetBrain automatically initializes and downloads model on first run
+- Semantic search ready immediately - no manual "Download Model" button needed
+- Model auto-downloads in background with progress indication
+- Graceful degradation if initialization fails
+
+**Fixed PyInstaller Bundling for Full Functionality**
+- **Critical fix**: scipy and torch now bundled in EXE (required by sentence_transformers)
+- Was excluding these dependencies, causing "DatasetBrain not available" in bundled version
+- Tests passed locally but failed in PyInstaller - now FIXED
+- EXE size: 370 MB (includes all ML dependencies bundled)
+
+**Better Error Messages**
+- If initialization fails, exact reason shown in Settings panel (e.g., "scipy missing")
+- Error popup on startup shows what went wrong
+- No more generic "not available" messages - specific diagnostics
+
+**UI Improvements**
+- Removed manual "Download Model" button (auto-download handles it)
+- Shows actual model size from cache (not hardcoded "90 MB")
+- Cleaner settings UI without manual download option
+
+**Result:** EXE now works perfectly with semantic search pre-loaded on startup! ✅
+
+---
+
 ## What's New in v2.4.4 — Critical PyInstaller Bundling Fix
 
 ### 🐛 Bug Fix
