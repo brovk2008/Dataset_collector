@@ -26,5 +26,5 @@ jobs:
         run: ruff check src/ tests/
 
       - name: Type check with mypy
-        run: mypy src/ --ignore-missing-imports --exclude='tests/'
+        run: mypy src/dataset_collector --ignore-missing-imports
         continue-on-error: true
