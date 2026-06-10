@@ -1,5 +1,4 @@
 """UI module."""
 
-from dataset_collector.ui.main_window import MainWindow
-
+# MainWindow is imported lazily in main.py to avoid circular imports with heavy dependencies
 __all__ = ["MainWindow"]

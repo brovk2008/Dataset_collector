@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PySide6.QtCore import Qt, QUrl
 from PySide6.QtGui import QDesktopServices
@@ -32,6 +33,7 @@ from dataset_collector.manifest.manifest_generator import ManifestGenerator
 from dataset_collector.search.search_engine import SearchEngine
 from dataset_collector.storage.storage_manager import StorageManager
 from dataset_collector.ui.widgets.analysis_panel import AnalysisPanel
+from dataset_collector.ui.widgets.analytics_panel import AnalyticsPanel
 from dataset_collector.ui.widgets.dataset_detail_dialog import DatasetDetailDialog
 from dataset_collector.ui.widgets.download_panel import DownloadPanel
 from dataset_collector.ui.widgets.health_panel import HealthPanel
@@ -46,6 +48,9 @@ from dataset_collector.ui.workers import (
     SearchWorker,
 )
 
+if TYPE_CHECKING:
+  from dataset_collector.databrain import DatasetBrain
+
 
 class MainWindow(QMainWindow):
   """Primary application window orchestrating all workflow panels."""
@@ -55,7 +60,12 @@ class MainWindow(QMainWindow):
     self._config = config
     self._logger = AppLogger(config.logs_dir)
     self._creds = CredentialStore()
-    self._search_engine = SearchEngine(config, self._logger, self._creds)
+
+    # Lazy-initialize DatasetBrain (defer heavy imports until needed)
+    self._databrain: DatasetBrain | None = None
+
+    # Initialize SearchEngine without DatasetBrain (will be added when DatasetBrain initializes)
+    self._search_engine = SearchEngine(config, self._logger, self._creds, databrain=None)
     self._download_engine = DownloadEngine(config, self._logger, self._creds)
     self._manifest_gen = ManifestGenerator(config.manifest_dir, self._logger)
     self._analyzer = DatasetAnalyzer(self._logger)
@@ -67,10 +77,22 @@ class MainWindow(QMainWindow):
     self._last_analysis_path: str = ""
     self._analyze_queue: list[tuple[str, str]] = []
     self._results: list[DatasetResult] = []
+    self._last_search_id: int = -1
 
     self._setup_window()
     self._build_ui()
     self._connect_signals()
+
+  def _get_databrain(self) -> DatasetBrain | None:
+    """Lazy-initialize DatasetBrain on first access."""
+    if self._databrain is None:
+      try:
+        self._databrain = DatasetBrain(self._config, self._logger)
+        # Update SearchEngine with initialized DatasetBrain
+        self._search_engine._databrain = self._databrain
+      except Exception as e:
+        self._logger.error(f"Failed to initialize DatasetBrain: {e}", origin="MainWindow")
+    return self._databrain
 
   def _setup_window(self) -> None:
     self.setWindowTitle("Dataset_Collector")
@@ -163,8 +185,13 @@ class MainWindow(QMainWindow):
     self._analysis_panel = AnalysisPanel()
     self._tabs.addTab(self._analysis_panel, "Analysis")
 
+    # Analytics tab (DatasetBrain)
+    self._analytics_panel = AnalyticsPanel(None)
+    self._tabs.addTab(self._analytics_panel, "Analytics")
+
     # Settings tab
     self._settings_panel = SettingsPanel(self._creds)
+    self._settings_panel.set_databrain(None)
     self._tabs.addTab(self._settings_panel, "Settings")
 
     # System health tab
@@ -195,6 +222,19 @@ class MainWindow(QMainWindow):
     self._download_panel.retry_clicked.connect(self._on_retry_download)
     self._library_panel.analyze_requested.connect(self._on_analyze)
     self._settings_panel.credentials_changed.connect(self._on_credentials_changed)
+
+  def _log_click(self, dataset: DatasetResult, rank_position: int = 0) -> None:
+    """Log user click on dataset for learning."""
+    try:
+      databrain = self._get_databrain()
+      if databrain and hasattr(databrain, "behavior_tracker"):
+        search_id = dataset.metadata.get("_search_id", -1)
+        if search_id > 0:
+          databrain.behavior_tracker.log_click(
+            search_id, dataset.id, rank_position, "table"
+          )
+    except Exception as e:
+      self._logger.debug(f"Failed to log click: {e}", origin="MainWindow")
 
   def _open_donate_page(self) -> None:
     QDesktopServices.openUrl(QUrl(DONATE_URL))
@@ -230,6 +270,15 @@ class MainWindow(QMainWindow):
 
   def _on_scan_finished(self, results: list) -> None:
     self._results = results
+
+    # Compute health scores and populate dataset embeddings
+    databrain = self._get_databrain()
+    if databrain:
+      try:
+        databrain.health_scorer.populate_health_scores(results)
+      except Exception as e:
+        self._logger.debug(f"Failed to populate health scores: {e}")
+
     self._results_table.set_results(results)
     self._search_panel.set_scanning(False)
     self._scan_progress.setVisible(False)
@@ -244,9 +293,15 @@ class MainWindow(QMainWindow):
       )
       self._status_bar.showMessage(f"Auto-selected {count} datasets within size budget")
 
+    # Refresh analytics
+    if databrain and hasattr(self, "_analytics_panel"):
+      self._analytics_panel.set_databrain(databrain)
+      self._analytics_panel.refresh()
+
     self._on_selection_changed()
 
   def _on_dataset_details(self, dataset: DatasetResult) -> None:
+    self._log_click(dataset)
     dialog = DatasetDetailDialog(dataset, self)
     if dialog.exec():
       self._results_table.select_dataset(dataset.id)
@@ -315,6 +370,11 @@ class MainWindow(QMainWindow):
     self._download_panel.update_queue_stats(len(selected), 0, 0)
     self._download_panel.set_downloading(True)
     self._status_bar.showMessage(f"Downloading {len(selected)} datasets...")
+
+    # Log download set for co-download tracking
+    databrain = self._get_databrain()
+    if databrain:
+      databrain.co_downloads_tracker.log_download_set([ds.id for ds in selected])
 
     self._download_worker = DownloadWorker(self._download_engine, selected)
     self._download_worker.progress.connect(self._download_panel.update_task)

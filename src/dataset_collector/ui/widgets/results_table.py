@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from dataset_collector.core.models import DatasetResult
 from dataset_collector.search.relevance import suggest_within_budget
+from dataset_collector.ui.widgets.search_explanation_dialog import SearchExplanationDialog
 
 DATASET_ID_ROLE = Qt.ItemDataRole.UserRole
 PAGE_SIZE = 25
@@ -29,7 +30,7 @@ class ResultsTable(QWidget):
   selection_changed = Signal()
   dataset_activated = Signal(object)
 
-  COLUMNS = ["", "Dataset Name", "Rank", "Quality", "Sources", "Size", "License", "Updated"]
+  COLUMNS = ["", "Dataset Name", "Rank", "Health", "Quality", "Sources", "Size", "License", "Updated"]
 
   def __init__(self, parent: QWidget | None = None) -> None:
     super().__init__(parent)
@@ -78,6 +79,10 @@ class ResultsTable(QWidget):
     self._details_btn = QPushButton("View Details")
     self._details_btn.clicked.connect(self._open_selected_details)
     controls.addWidget(self._details_btn)
+
+    self._score_btn = QPushButton("Score Breakdown")
+    self._score_btn.clicked.connect(self._show_score_breakdown)
+    controls.addWidget(self._score_btn)
 
     self._compare_btn = QPushButton("Compare Selected")
     self._compare_btn.clicked.connect(self._compare_selected)
@@ -186,13 +191,19 @@ class ResultsTable(QWidget):
       name_item.setToolTip(f"{ds.name}\n\n{desc}\n\nDouble-click for details")
       self._table.setItem(row, 1, name_item)
       self._table.setItem(row, 2, QTableWidgetItem(f"{ds.rank_score}/100"))
-      self._table.setItem(row, 3, QTableWidgetItem(f"{ds.quality_score}/10"))
+
+      health_item = QTableWidgetItem(f"{ds.health_score}/100")
+      health_label = self._get_health_label(ds.health_score)
+      health_item.setToolTip(f"Dataset health: {health_label}")
+      self._table.setItem(row, 3, health_item)
+
+      self._table.setItem(row, 4, QTableWidgetItem(f"{ds.quality_score}/10"))
       sources = ", ".join(ds.available_sources) if ds.available_sources else ds.source.value
-      self._table.setItem(row, 4, QTableWidgetItem(sources))
-      self._table.setItem(row, 5, QTableWidgetItem(ds.size_display))
-      self._table.setItem(row, 6, QTableWidgetItem(ds.license_info))
+      self._table.setItem(row, 5, QTableWidgetItem(sources))
+      self._table.setItem(row, 6, QTableWidgetItem(ds.size_display))
+      self._table.setItem(row, 7, QTableWidgetItem(ds.license_info))
       updated = ds.last_updated.strftime("%Y-%m-%d") if ds.last_updated else "—"
-      self._table.setItem(row, 7, QTableWidgetItem(updated))
+      self._table.setItem(row, 8, QTableWidgetItem(updated))
 
     self._table.blockSignals(False)
 
@@ -287,6 +298,26 @@ class ResultsTable(QWidget):
 
   def selected_count(self) -> int:
     return len(self._checked_ids)
+
+  def _get_health_label(self, score: int) -> str:
+    if score >= 80:
+      return "Excellent"
+    elif score >= 60:
+      return "Good"
+    elif score >= 40:
+      return "Fair"
+    else:
+      return "Poor"
+
+  def _show_score_breakdown(self) -> None:
+    rows = self._table.selectionModel().selectedRows()
+    if not rows:
+      from PySide6.QtWidgets import QMessageBox
+      QMessageBox.information(self, "Score Breakdown", "Select a dataset to view score breakdown.")
+      return
+    ds = self._dataset_at_row(rows[0].row())
+    if ds:
+      SearchExplanationDialog(ds, self).exec()
 
 
 def _format_bytes(size: int) -> str:

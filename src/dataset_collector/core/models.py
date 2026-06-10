@@ -49,6 +49,9 @@ class DatasetResult:
     relevance_score: float = 0.0
     quality_score: float = 0.0
     rank_score: int = 0
+    semantic_score: float = 0.0
+    click_score: float = 0.0
+    health_score: int = 0
     available_sources: list[str] = field(default_factory=list)
     requires_auth: bool = False
     auth_message: str = ""

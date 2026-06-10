@@ -33,11 +33,13 @@ class SearchEngine:
     config: ConfigManager,
     logger: AppLogger,
     credential_store: CredentialStore | None = None,
+    databrain = None,
   ) -> None:
     self._config = config
     self._logger = logger
     self._creds = credential_store or CredentialStore()
     self._connectors: dict[DataSource, BaseConnector] = self._build_connectors()
+    self._databrain = databrain
     self._cancelled = False
 
   def reload_connectors(self) -> None:
@@ -116,7 +118,41 @@ class SearchEngine:
 
     # Merge cross-source duplicates, then score and rank
     merged = merge_duplicates(all_results)
-    ranked = rank_results(request.query, merged)
+
+    # Compute semantic scores if DatasetBrain is available
+    if self._databrain and self._databrain.enabled:
+      try:
+        if progress_callback:
+          progress_callback("Computing semantic similarities...", 85.0)
+
+        # Initialize semantic ranker if not already done
+        if self._databrain.semantic_ranker is None:
+          from dataset_collector.databrain.semantic_ranker import SemanticRanker
+          self._databrain.semantic_ranker = SemanticRanker(
+            self._databrain.model_manager,
+            self._databrain.embeddings_cache,
+            self._logger,
+          )
+
+        # Score results with semantic similarity
+        merged = self._databrain.semantic_ranker.score_results(request.query, merged)
+      except Exception as e:
+        self._logger.error(f"Semantic scoring failed: {e}", origin="SearchEngine")
+        # Continue with keyword-only ranking if semantic fails
+
+    # Perform hybrid ranking
+    ranked = rank_results(request.query, merged, use_hybrid=self._databrain is not None)
+
+    # Log search for user behavior tracking
+    if self._databrain:
+      search_id = self._databrain.behavior_tracker.log_search(
+        request.query,
+        [s.value for s in request.sources],
+        len(ranked),
+      )
+      # Store search_id in metadata for click tracking
+      for r in ranked:
+        r.metadata["_search_id"] = search_id
 
     self._logger.log_search(
       request.query,

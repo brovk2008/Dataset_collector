@@ -88,12 +88,78 @@ def compute_rank_score(query: str, result: DatasetResult) -> int:
   return int(min(max(total, 0), 100))
 
 
-def rank_results(query: str, results: list[DatasetResult], min_score: float = 0.12) -> list[DatasetResult]:
+def compute_hybrid_rank_score(
+  query: str,
+  result: DatasetResult,
+  weights: dict | None = None,
+) -> int:
+  """Composite rank score 0-100 with semantic + user learning (hybrid ranking)."""
+  weights = weights or {
+    "keyword": 0.40,
+    "semantic": 0.40,
+    "popularity": 0.10,
+    "freshness": 0.05,
+    "user_clicks": 0.05,
+  }
+
+  # Keyword component (existing relevance score, 0-1)
+  keyword_score = result.relevance_score
+
+  # Semantic component (0-1)
+  semantic_score = result.semantic_score
+
+  # Popularity component (0-1)
+  popularity_0to1 = 0.0
+  downloads = result.metadata.get("downloads", 0)
+  stars = result.metadata.get("stars", 0)
+  if isinstance(downloads, int):
+    popularity_0to1 += min(downloads / 10000, 1.0)
+  if isinstance(stars, int):
+    popularity_0to1 += min(stars / 500, 1.0)
+  popularity_0to1 = min(popularity_0to1, 1.0)
+
+  # Freshness component (0-1)
+  freshness_0to1 = 0.0
+  if result.last_updated:
+    days = max(
+      (datetime.now(timezone.utc) - result.last_updated.replace(tzinfo=timezone.utc)).days,
+      0,
+    )
+    freshness_0to1 = max(0, 1 - days / 365)
+
+  # User clicks component (0-1)
+  click_score = result.click_score
+
+  # Weighted sum (0-100)
+  total = (
+    keyword_score * weights["keyword"] * 100
+    + semantic_score * weights["semantic"] * 100
+    + popularity_0to1 * weights["popularity"] * 100
+    + freshness_0to1 * weights["freshness"] * 100
+    + click_score * weights["user_clicks"] * 100
+  )
+
+  return int(min(max(total, 0), 100))
+
+
+def rank_results(
+  query: str,
+  results: list[DatasetResult],
+  min_score: float = 0.12,
+  use_hybrid: bool = True,
+  hybrid_weights: dict | None = None,
+) -> list[DatasetResult]:
   """Score, quality-rate, and sort results."""
   for r in results:
     r.relevance_score = score_relevance(query, r)
     r.quality_score = compute_quality_score(r)
-    r.rank_score = compute_rank_score(query, r)
+
+    # Use hybrid ranking if semantic scores are available, otherwise use classic ranking
+    if use_hybrid and r.semantic_score > 0:
+      r.rank_score = compute_hybrid_rank_score(query, r, weights=hybrid_weights)
+    else:
+      r.rank_score = compute_rank_score(query, r)
+
     if not r.available_sources:
       r.available_sources = [r.source.value]
 

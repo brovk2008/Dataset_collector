@@ -120,6 +120,37 @@ class SettingsPanel(QWidget):
     gov_layout.addWidget(india_save)
     layout.addWidget(gov_group)
 
+    # Enhanced Search (DatasetBrain)
+    enhanced_group = QGroupBox("Enhanced Search (DatasetBrain)")
+    enhanced_form = QFormLayout(enhanced_group)
+
+    self._enhanced_status = QLabel("Not installed")
+    self._enhanced_status.setObjectName("secondaryLabel")
+    enhanced_form.addRow("Status:", self._enhanced_status)
+
+    self._model_info = QLabel("")
+    self._model_info.setObjectName("secondaryLabel")
+    enhanced_form.addRow("Info:", self._model_info)
+
+    self._cache_size = QLabel("Cache: 0 MB")
+    self._cache_size.setObjectName("secondaryLabel")
+    enhanced_form.addRow("Size:", self._cache_size)
+
+    enhanced_btns = QHBoxLayout()
+    self._download_model = QPushButton("Download Model (90 MB)")
+    self._download_model.clicked.connect(self._on_download_model)
+    self._rebuild_cache = QPushButton("Rebuild Embeddings")
+    self._rebuild_cache.clicked.connect(self._on_rebuild_cache)
+    self._clear_learning = QPushButton("Clear Learning Data")
+    self._clear_learning.clicked.connect(self._on_clear_learning)
+    enhanced_btns.addWidget(self._download_model)
+    enhanced_btns.addWidget(self._rebuild_cache)
+    enhanced_btns.addWidget(self._clear_learning)
+    enhanced_btns.addStretch()
+    enhanced_form.addRow("", enhanced_btns)
+
+    layout.addWidget(enhanced_group)
+
     layout.addStretch()
 
   def _load_values(self) -> None:
@@ -182,3 +213,82 @@ class SettingsPanel(QWidget):
     except Exception as e:
       self._kaggle_status.setText("✗ Connection error")
       QMessageBox.warning(self, "Kaggle", f"Connection failed: {e}")
+
+  def set_databrain(self, databrain) -> None:
+    """Set DatasetBrain instance and update UI."""
+    self._databrain = databrain
+    self._refresh_enhanced_search_status()
+
+  def _refresh_enhanced_search_status(self) -> None:
+    """Update Enhanced Search UI with current status."""
+    if not hasattr(self, "_databrain") or self._databrain is None:
+      self._enhanced_status.setText("DatasetBrain not available")
+      return
+
+    status = self._databrain.model_manager.get_model_status()
+    if status["installed"]:
+      self._enhanced_status.setText("Installed ✓")
+      size_mb = status.get("size_mb", 90)
+      self._model_info.setText(f"all-MiniLM-L6-v2 ({size_mb:.0f} MB)")
+      self._download_model.setEnabled(False)
+    else:
+      self._enhanced_status.setText("Not installed")
+      self._model_info.setText("Download to enable semantic search")
+      self._download_model.setEnabled(True)
+
+    cache_stats = self._databrain.embeddings_cache.stats()
+    self._cache_size.setText(
+      f"Cache: {cache_stats['total_size_mb']:.1f} MB ({cache_stats['total_cached']} datasets)"
+    )
+
+  def _on_download_model(self) -> None:
+    """Download the embedding model."""
+    if not hasattr(self, "_databrain"):
+      QMessageBox.warning(self, "Error", "DatasetBrain not available")
+      return
+
+    self._download_model.setEnabled(False)
+    self._enhanced_status.setText("Downloading...")
+
+    def progress_callback(msg: str, pct: float) -> None:
+      self._enhanced_status.setText(f"{msg} {int(pct)}%")
+
+    success = self._databrain.model_manager.download_model(progress_callback)
+
+    if success:
+      self._refresh_enhanced_search_status()
+      QMessageBox.information(
+        self, "Success", "Embedding model downloaded successfully!"
+      )
+    else:
+      self._enhanced_status.setText("Download failed")
+      QMessageBox.warning(
+        self,
+        "Error",
+        "Failed to download model. Check internet connection and try again.",
+      )
+
+  def _on_rebuild_cache(self) -> None:
+    """Rebuild embeddings cache."""
+    reply = QMessageBox.question(
+      self,
+      "Rebuild Cache",
+      "Regenerate all dataset embeddings? This may take a few minutes.",
+      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+    )
+    if reply == QMessageBox.StandardButton.Yes:
+      self._databrain.embeddings_cache.clear()
+      self._refresh_enhanced_search_status()
+      QMessageBox.information(self, "Cache Cleared", "Embeddings will be regenerated on next search.")
+
+  def _on_clear_learning(self) -> None:
+    """Clear user behavior database."""
+    reply = QMessageBox.question(
+      self,
+      "Clear Learning Data",
+      "Delete all search history, clicks, and learning data? Cannot be undone.",
+      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.Cancel,
+    )
+    if reply == QMessageBox.StandardButton.Yes:
+      self._databrain.behavior_tracker.clear_all()
+      QMessageBox.information(self, "Data Cleared", "Learning data has been deleted.")
