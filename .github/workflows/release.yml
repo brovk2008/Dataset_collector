@@ -103,4 +103,7 @@ jobs:
           generate_release_notes: true
           fail_on_unmatched_files: false
           files: |
-            artifacts/**/*
+            artifacts/Dataset_Collector_Setup.exe
+            artifacts/Dataset_Collector_Portable.zip
+            artifacts/Dataset_Collector-macOS.zip
+            artifacts/Dataset_Collector-Linux.tar.gz
