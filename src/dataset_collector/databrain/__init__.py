@@ -34,8 +34,8 @@ class DatasetBrain:
     self._cache_dir = cache_dir or (Path.home() / ".dataset_collector" / "cache")
     self._cache_dir.mkdir(parents=True, exist_ok=True)
 
-    # Core v2 components
-    self.model_manager = ModelManager(config, logger)
+    # Core v2 components - download model on init if not present
+    self.model_manager = ModelManager(config, logger, download_on_init=True)
     self.embeddings_cache = EmbeddingsCache(self._cache_dir, logger)
     self.behavior_tracker = UserBehaviorTracker(self._cache_dir, logger)
 

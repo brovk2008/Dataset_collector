@@ -34,21 +34,31 @@ class ModelManager:
 
   def is_installed(self) -> bool:
     """Check if model is already downloaded."""
+    # Check HF Hub cache structure (new) - primary path
+    hf_cache_path = self._cache_dir / "models--sentence-transformers--all-MiniLM-L6-v2"
+    if (hf_cache_path / "snapshots").exists():
+      for snapshot_dir in (hf_cache_path / "snapshots").iterdir():
+        if (snapshot_dir / "model.safetensors").exists():
+          return True
+    # Fallback to old structure for backward compatibility
     return (self._model_path / "pytorch_model.bin").exists()
 
-  def get_model_status(self) -> dict:
+  def get_model_status(self) -> dict[str, bool | float | str | int]:
     """Return current model status."""
     if self.is_installed():
-      size_bytes = sum(
-        f.stat().st_size for f in self._model_path.rglob("*") if f.is_file()
-      )
-      size_mb = size_bytes / (1024 * 1024)
-      return {
-        "installed": True,
-        "size_mb": size_mb,
-        "path": str(self._model_path),
-        "embedding_dim": self.EMBEDDING_DIM,
-      }
+      # Calculate size from HF Hub cache
+      hf_cache_path = self._cache_dir / "models--sentence-transformers--all-MiniLM-L6-v2"
+      if hf_cache_path.exists():
+        size_bytes = sum(
+          f.stat().st_size for f in hf_cache_path.rglob("*") if f.is_file()
+        )
+        size_mb = size_bytes / (1024 * 1024)
+        return {
+          "installed": True,
+          "size_mb": size_mb,
+          "path": str(hf_cache_path),
+          "embedding_dim": self.EMBEDDING_DIM,
+        }
     return {
       "installed": False,
       "size_mb": 0,
@@ -85,7 +95,7 @@ class ModelManager:
       )
       return False
 
-  def get_encoder(self):
+  def get_encoder(self):  # type: ignore
     """Get or load model encoder instance."""
     if self._model_instance is None:
       if not self.is_installed():
@@ -100,7 +110,7 @@ class ModelManager:
       )
     return self._model_instance
 
-  def get_model_info(self) -> dict:
+  def get_model_info(self) -> dict[str, bool | float | str | int]:
     """Return model metadata."""
     return {
       "name": self.MODEL_NAME,
