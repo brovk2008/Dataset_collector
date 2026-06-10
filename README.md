@@ -6,7 +6,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue)](https://www.python.org/)
-[![Release](https://img.shields.io/badge/release-v1.1.3-blue)](https://github.com/brovk2008/Dataset_collector/releases/latest)
+[![Release](https://img.shields.io/badge/release-v2.0.0-green)](https://github.com/brovk2008/Dataset_collector/releases/latest)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey)](https://github.com/brovk2008/Dataset_collector/releases)
 
 No Python installation required — download a release for your platform.
@@ -33,6 +33,69 @@ No Python installation required — download a release for your platform.
 
 ---
 
+## What's New in v2.0.0 — DatasetBrain Semantic Discovery
+
+### 🎯 Major Features
+
+**Semantic Search with AI-Powered Ranking**
+- `sentence-transformers` embeddings for semantic understanding
+- Hybrid ranking: **keyword (40%) + semantic (40%) + popularity + freshness + user clicks**
+- Finds semantically related datasets, not just keyword matches
+- Example: Search "anime" → finds anime subtitles + anime dialogue datasets + related research papers
+
+**User Behavior Learning**
+- Track search history and click patterns
+- Boost ranking of frequently clicked datasets automatically
+- "People Also Downloaded" shows co-occurrence patterns
+- Personalized dataset recommendations
+
+**Search Analytics Dashboard**
+- Top searches (30 days)
+- Most clicked datasets
+- Search effectiveness metrics
+- Model statistics and cache info
+
+**Enhanced Dataset Health Score (0–100)**
+- Metadata completeness
+- Documentation quality
+- Download availability
+- Update recency
+- Popularity scoring
+- Color-coded display in results
+
+**Local ML Without Cloud APIs**
+- 384-dim embeddings cached locally (SQLite)
+- Model auto-downloads on first use (~90 MB)
+- No internet required after initial download
+- Zero telemetry, fully private
+
+**Improved UI/UX**
+- Score breakdown modal — see exactly why a result ranked #N
+- Adaptive layouts for small windows
+- Scrollable settings panel
+- Better button organization
+
+### 🐛 Bug Fixes & Improvements
+
+| Issue | Fix |
+|-------|-----|
+| **App startup hang** | Deferred DatasetBrain initialization + TYPE_CHECKING guards |
+| **Circular imports** | Fixed import chains with lazy loading pattern |
+| **UI text cutoff** | Reorganized buttons across multiple rows |
+| **Window resize issues** | Better minimum size + flexible column widths |
+| **Missing dependencies** | Added cryptography to requirements |
+
+### 📊 What's Under the Hood
+
+New components:
+- `databrain/` — Semantic discovery subsystem
+- `embeddings_cache.py` — SQLite for 384-dim vectors
+- `user_behavior.py` — Search/click/download tracking
+- `semantic_ranker.py` — Hybrid scoring engine
+- `analytics.py` — Search statistics aggregation
+
+---
+
 ## Screenshots
 
 | Main Search | Results |
@@ -53,10 +116,15 @@ No Python installation required — download a release for your platform.
 
 | Feature | Description |
 |---------|-------------|
-| **Multi-source search** | Kaggle, GitHub, Hugging Face, Government portals, Research repos, **Research Papers**, Internet Archive, Google Dataset Search |
+| **Semantic search (v2.0)** | AI-powered embeddings find semantically related datasets, not just keyword matches |
+| **Hybrid ranking (v2.0)** | Composite score: 40% keyword + 40% semantic + 20% signals (popularity, freshness, clicks) |
+| **User learning (v2.0)** | Tracks searches and clicks; boosts ranking of datasets you interact with |
+| **Search analytics (v2.0)** | Dashboard: top queries, clicked datasets, search effectiveness, model stats |
+| **Health score (v2.0)** | 0–100 reliability metric per dataset (documentation, availability, recency, popularity) |
+| **Score breakdown (v2.0)** | Modal showing exact scoring components for any result |
+| **Multi-source search** | Kaggle, GitHub, Hugging Face, Government portals, Research repos, Research Papers, Internet Archive, Google Dataset Search |
 | **Research paper downloads** | arXiv, OpenAlex, and Zenodo publications — PDF + metadata saved locally |
 | **Researcher presets** | One-click presets for academic dataset and paper searches |
-| **Intelligent ranking** | Composite relevance score (0–100) based on query match, popularity, recency, and credibility |
 | **Quality scoring** | Per-dataset quality metric (0–10) for documentation, metadata, and availability |
 | **Duplicate detection** | Merges the same dataset found across multiple sources into one entry |
 | **Dataset comparison** | Side-by-side compare size, license, quality, and sources (2–5 datasets) |
@@ -185,9 +253,15 @@ Dataset_collector/
 ├── config/default_config.yaml      # User-overridable settings
 └── src/dataset_collector/
     ├── core/           Models, config, encrypted credential store
+    ├── databrain/      Semantic discovery engine (v2.0)
+    │   ├── model_manager.py       sentence-transformers lifecycle
+    │   ├── embeddings_cache.py    SQLite 384-dim vector cache
+    │   ├── semantic_ranker.py     Cosine similarity + hybrid ranking
+    │   ├── user_behavior.py       Search/click/download tracking
+    │   └── analytics.py           Search statistics aggregation
     ├── search/
     │   ├── connectors/ Plugin-style source connectors
-    │   ├── relevance.py  Ranking (0–100)
+    │   ├── relevance.py  Hybrid ranking (keyword + semantic)
     │   ├── quality.py    Quality scoring (0–10)
     │   └── dedup.py      Cross-source duplicate merging
     ├── download/       Queue engine with pause/resume/cancel
@@ -196,6 +270,15 @@ Dataset_collector/
     ├── storage/        Local library index
     ├── logging/        Structured app logs
     └── ui/             PySide6 desktop interface
+        ├── main_window.py          Main application window
+        ├── widgets/
+        │   ├── search_panel.py      Query + filters input
+        │   ├── results_table.py     Paginated results display
+        │   ├── download_panel.py    Download progress & controls
+        │   ├── analytics_panel.py   Search analytics dashboard (v2.0)
+        │   ├── search_explanation_dialog.py  Score breakdown (v2.0)
+        │   └── ...other panels
+        └── styles/dark_theme.qss   Dark theme stylesheet
 ```
 
 ### Plugin System
@@ -204,14 +287,58 @@ Each data source implements `BaseConnector` with `search()` and optional `get_do
 
 ---
 
+## Changelog
+
+### v2.0.0 (Current)
+
+**Added:**
+- DatasetBrain semantic discovery engine with sentence-transformers embeddings
+- Hybrid ranking system (keyword + semantic + popularity + freshness + user clicks)
+- User behavior tracking (searches, clicks, co-downloads) with SQLite persistence
+- Search analytics dashboard (top queries, clicked datasets, effectiveness)
+- Dataset health score (0–100) with 5 quality factors
+- Score breakdown modal showing ranking components
+- Enhanced search settings panel with model download and cache management
+- Analytics panel displaying search insights
+- Adaptive UI layouts for small windows and mobile
+
+**Fixed:**
+- Critical startup hang caused by eager DatasetBrain initialization
+- Circular import chains resolved with TYPE_CHECKING guards
+- UI text cutoff on small windows (reorganized buttons)
+- Window sizing issues (increased minimum to 1000x700)
+- Missing cryptography dependency
+
+**Changed:**
+- Results table: buttons wrapped across 2 rows for better fit
+- Settings panel: added scroll area for vertical scrolling
+- Library panel: button organization improved
+- Download panel: better label spacing and sizing
+
+### v1.1.3
+
+**Features:**
+- Multi-source dataset search (8+ sources)
+- Research paper downloads (PDF + metadata)
+- Download queue with pause/resume/cancel
+- Library management and local storage
+- Encrypted credential storage
+- System health monitoring
+- Cross-platform builds (Windows/macOS/Linux)
+
+---
+
 ## Roadmap
 
-- AI dataset recommendations
-- Dataset quality scoring improvements
+- Similar datasets engine (k-NN similarity search)
+- Smart query expansion (semantic query enhancement)
+- Dataset collections (auto-generated thematic clusters)
+- Search intent classification
+- Personalized recommendations
+- Dataset co-download analysis
 - Cloud storage export (S3, GCS)
 - Dataset version tracking
 - Dataset merging utilities
-- Dataset similarity search
 
 ---
 
