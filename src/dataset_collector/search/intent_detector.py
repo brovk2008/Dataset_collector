@@ -27,27 +27,27 @@ class IntentDetector:
   FILTER_SUGGESTIONS = {
     "medical": {
       "file_types": [FileType.CSV, FileType.JSON, FileType.ZIP],
-      "min_size": SizeFilter.MIN_1GB,
+      "min_size": SizeFilter.MAX_SIZE,
       "licenses": ["commercial-friendly"],
     },
     "image": {
-      "file_types": [FileType.ZIP, FileType.TAR],
-      "min_size": SizeFilter.MIN_100MB,
+      "file_types": [FileType.ZIP, FileType.TAR, FileType.IMAGES],
+      "min_size": SizeFilter.MAX_SIZE,
       "licenses": ["any"],
     },
     "nlp": {
-      "file_types": [FileType.TXT, FileType.CSV, FileType.JSON],
+      "file_types": [FileType.CSV, FileType.JSON, FileType.PDF],
       "min_size": SizeFilter.ANY,
       "licenses": ["commercial-friendly"],
     },
     "audio": {
-      "file_types": [FileType.ZIP, FileType.TAR],
-      "min_size": SizeFilter.MIN_100MB,
+      "file_types": [FileType.ZIP, FileType.TAR, FileType.AUDIO],
+      "min_size": SizeFilter.MAX_SIZE,
       "licenses": ["any"],
     },
     "video": {
-      "file_types": [FileType.ZIP, FileType.TAR],
-      "min_size": SizeFilter.MIN_1GB,
+      "file_types": [FileType.ZIP, FileType.TAR, FileType.VIDEOS],
+      "min_size": SizeFilter.MAX_SIZE,
       "licenses": ["any"],
     },
     "time_series": {
@@ -56,7 +56,7 @@ class IntentDetector:
       "licenses": ["any"],
     },
     "structured": {
-      "file_types": [FileType.CSV, FileType.JSON, FileType.PARQUET],
+      "file_types": [FileType.CSV, FileType.JSON, FileType.PARQUET, FileType.XLSX],
       "min_size": SizeFilter.ANY,
       "licenses": ["any"],
     },
@@ -66,13 +66,13 @@ class IntentDetector:
       "licenses": ["any"],
     },
     "3d": {
-      "file_types": [FileType.ZIP],
-      "min_size": SizeFilter.MIN_100MB,
+      "file_types": [FileType.ZIP, FileType.TAR],
+      "min_size": SizeFilter.MAX_SIZE,
       "licenses": ["any"],
     },
     "geospatial": {
-      "file_types": [FileType.ZIP, FileType.GeoTIFF],
-      "min_size": SizeFilter.MIN_100MB,
+      "file_types": [FileType.ZIP, FileType.TAR],
+      "min_size": SizeFilter.MAX_SIZE,
       "licenses": ["any"],
     },
   }
@@ -157,7 +157,7 @@ class IntentDetector:
     return result.get("sources", [])
 
   def should_suggest_large_budget(self, query: str) -> bool:
-    """Check if query suggests large datasets (>1GB likely)."""
+    """Check if query suggests large datasets."""
     result = self.detect_intent(query)
     size_filter = result.get("size_filter")
-    return size_filter == SizeFilter.MIN_1GB
+    return size_filter == SizeFilter.MAX_SIZE
