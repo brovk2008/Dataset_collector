@@ -20,9 +20,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyinstaller
+          pip install pyinstaller sentence-transformers torch
           pip install -e .
-        continue-on-error: true
 
       - name: Pre-download sentence-transformers model
         run: |
