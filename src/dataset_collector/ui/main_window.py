@@ -137,6 +137,8 @@ class MainWindow(QMainWindow):
     search_layout = QVBoxLayout(search_tab)
 
     splitter = QSplitter(Qt.Orientation.Horizontal)
+    splitter.setCollapsible(0, False)
+    splitter.setCollapsible(1, False)
 
     # Left: search config
     left_widget = QWidget()
@@ -144,8 +146,7 @@ class MainWindow(QMainWindow):
     left_layout.setContentsMargins(0, 0, 0, 0)
     self._search_panel = SearchPanel()
     left_layout.addWidget(self._search_panel)
-    left_widget.setMinimumWidth(300)
-    left_widget.setMaximumWidth(380)
+    left_widget.setMinimumWidth(280)
     splitter.addWidget(left_widget)
 
     # Right: results + download
@@ -171,8 +172,9 @@ class MainWindow(QMainWindow):
     right_layout.addWidget(self._download_panel)
 
     splitter.addWidget(right_widget)
-    splitter.setStretchFactor(0, 0)
-    splitter.setStretchFactor(1, 1)
+    splitter.setStretchFactor(0, 1)
+    splitter.setStretchFactor(1, 2)
+    splitter.setSizes([400, 800])
 
     search_layout.addWidget(splitter)
     self._tabs.addTab(search_tab, "Search && Download")
