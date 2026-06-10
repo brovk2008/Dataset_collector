@@ -128,8 +128,9 @@ class MainWindow(QMainWindow):
         traceback.print_exc()
         self._logger.error(error_msg)
         import sys
-        sys.stderr.write(f"\n[DATABRAIN INITIALIZATION FAILED]\n{error_msg}\n")
-        traceback.print_exc(file=sys.stderr)
+        if sys.stderr is not None:
+          sys.stderr.write(f"\n[DATABRAIN INITIALIZATION FAILED]\n{error_msg}\n")
+          traceback.print_exc(file=sys.stderr)
     return self._databrain
 
   def _setup_window(self) -> None:

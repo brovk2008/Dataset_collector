@@ -20,14 +20,15 @@ class AppLogger:
     self._setup_standard_logging()
 
   def _setup_standard_logging(self) -> None:
+    import sys
     log_file = self._logs_dir / "app.log"
+    handlers = [logging.FileHandler(log_file, encoding="utf-8")]
+    if sys.stderr is not None:
+      handlers.append(logging.StreamHandler())
     logging.basicConfig(
       level=logging.INFO,
       format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-      handlers=[
-        logging.FileHandler(log_file, encoding="utf-8"),
-        logging.StreamHandler(),
-      ],
+      handlers=handlers,
       force=True,
     )
     self._logger = logging.getLogger("dataset_collector")

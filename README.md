@@ -33,6 +33,20 @@ No Python installation required — download a release for your platform.
 
 ---
 
+## What's New in v2.4.4 — Critical PyInstaller Bundling Fix
+
+### 🐛 Bug Fix
+
+**Fixed PyInstaller StreamHandler Crash**
+- Bundled EXE failed at startup with `'NoneType' object has no attribute 'write'`
+- Root cause: Logger's StreamHandler tried to write to stderr (None in windowed PyInstaller builds)
+- Solution: Added sys.stderr availability check before initializing StreamHandler
+- Also guarded sys.stderr.write() calls throughout codebase
+
+**Result:** EXE now launches cleanly without console errors. All tests pass (19/19). ✅
+
+---
+
 ## What's New in v2.4.3 — DatasetBrain Debugging & Model Auto-Download
 
 ### 🔧 Comprehensive Debugging Features
