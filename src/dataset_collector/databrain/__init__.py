@@ -16,6 +16,7 @@ from dataset_collector.databrain.health_score import HealthScorer
 from dataset_collector.databrain.intent_classifier import IntentClassifier
 from dataset_collector.databrain.query_expansion import QueryExpander
 from dataset_collector.databrain.recommendations import RecommendationEngine
+from dataset_collector.databrain.search_index import SearchIndex
 from dataset_collector.databrain.semantic_ranker import SemanticRanker
 from dataset_collector.databrain.similar_datasets import SimilarDatasetsEngine
 
@@ -62,6 +63,7 @@ class DatasetBrain:
       logger,
     )
     self.recommendations = RecommendationEngine(self.behavior_tracker, logger)
+    self.search_index = SearchIndex(self._cache_dir / "search_index.db", logger)
 
     # Analytics
     self.analytics = SearchAnalytics(
@@ -90,6 +92,7 @@ class DatasetBrain:
     """Cleanup resources."""
     self.embeddings_cache.close()
     self.behavior_tracker.close()
+    self.search_index.close()
     self._logger.info("DatasetBrain shutdown")
 
 

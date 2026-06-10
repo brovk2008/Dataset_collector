@@ -18,6 +18,7 @@ from PySide6.QtWidgets import (
 
 from dataset_collector.core.models import DatasetResult
 from dataset_collector.search.relevance import suggest_within_budget
+from dataset_collector.search.download_status import detect_download_status
 from dataset_collector.ui.widgets.search_explanation_dialog import SearchExplanationDialog
 
 DATASET_ID_ROLE = Qt.ItemDataRole.UserRole
@@ -30,7 +31,7 @@ class ResultsTable(QWidget):
   selection_changed = Signal()
   dataset_activated = Signal(object)
 
-  COLUMNS = ["", "Dataset Name", "Rank", "Health", "Quality", "Sources", "Size", "License", "Updated"]
+  COLUMNS = ["", "Dataset Name", "Rank", "Health", "Quality", "Status", "Sources", "Size", "License", "Updated"]
 
   def __init__(self, parent: QWidget | None = None) -> None:
     super().__init__(parent)
@@ -120,10 +121,11 @@ class ResultsTable(QWidget):
     header.setSectionResizeMode(2, QHeaderView.ResizeMode.ResizeToContents)  # Rank
     header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # Health
     header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Quality
-    header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Sources
-    header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Size
-    header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # License
-    header.setSectionResizeMode(8, QHeaderView.ResizeMode.ResizeToContents)  # Updated
+    header.setSectionResizeMode(5, QHeaderView.ResizeMode.ResizeToContents)  # Status
+    header.setSectionResizeMode(6, QHeaderView.ResizeMode.ResizeToContents)  # Sources
+    header.setSectionResizeMode(7, QHeaderView.ResizeMode.ResizeToContents)  # Size
+    header.setSectionResizeMode(8, QHeaderView.ResizeMode.ResizeToContents)  # License
+    header.setSectionResizeMode(9, QHeaderView.ResizeMode.ResizeToContents)  # Updated
 
     self._table.setColumnWidth(0, 35)
     self._table.setColumnWidth(3, 75)
@@ -234,12 +236,19 @@ class ResultsTable(QWidget):
       self._table.setItem(row, 3, health_item)
 
       self._table.setItem(row, 4, QTableWidgetItem(f"{ds.quality_score}/10"))
+
+      # Status column - download availability
+      status = detect_download_status(ds)
+      status_item = QTableWidgetItem(status.value)
+      status_item.setToolTip(f"Download: {status.value}")
+      self._table.setItem(row, 5, status_item)
+
       sources = ", ".join(ds.available_sources) if ds.available_sources else ds.source.value
-      self._table.setItem(row, 5, QTableWidgetItem(sources))
-      self._table.setItem(row, 6, QTableWidgetItem(ds.size_display))
-      self._table.setItem(row, 7, QTableWidgetItem(ds.license_info))
+      self._table.setItem(row, 6, QTableWidgetItem(sources))
+      self._table.setItem(row, 7, QTableWidgetItem(ds.size_display))
+      self._table.setItem(row, 8, QTableWidgetItem(ds.license_info))
       updated = ds.last_updated.strftime("%Y-%m-%d") if ds.last_updated else "—"
-      self._table.setItem(row, 8, QTableWidgetItem(updated))
+      self._table.setItem(row, 9, QTableWidgetItem(updated))
 
     self._table.blockSignals(False)
 
