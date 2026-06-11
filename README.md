@@ -21,8 +21,7 @@ No Python installation required — download a release for your platform.
 
 | Platform | Download |
 |----------|----------|
-| **Windows Installer** | [Dataset_Collector_v3.0.3.exe](https://github.com/brovk2008/Dataset_collector/releases/download/v3.0.3/Dataset_Collector_v3.0.3.exe) (370 MB) |
-| **Windows Portable** | [Dataset_Collector_v3.0.3_Portable.exe](https://github.com/brovk2008/Dataset_collector/releases/download/v3.0.3/Dataset_Collector_v3.0.3_Portable.exe) (370 MB) |
+| **Windows** | [Dataset_Collector_Setup.exe](https://github.com/brovk2008/Dataset_collector/releases/download/v3.0.3/Dataset_Collector_Setup.exe) (369.5 MB) |
 | **macOS & Linux** | Install via pip: `pip install dataset-collector` or build from source |
 | **Source Code** | [GitHub Repository](https://github.com/brovk2008/Dataset_collector) |
 
