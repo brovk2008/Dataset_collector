@@ -26,6 +26,7 @@ from dataset_collector.search.connectors import (
 from dataset_collector.core.credential_store import CredentialStore
 from dataset_collector.search.dedup import merge_duplicates, merge_duplicates_with_semantic
 from dataset_collector.search.relevance import rank_results
+from dataset_collector.search.search_stats import SearchStats
 
 
 class SearchEngine:
@@ -44,6 +45,8 @@ class SearchEngine:
     self._connectors: dict[DataSource, BaseConnector] = self._build_connectors()
     self._databrain = databrain
     self._cancelled = False
+    self.last_search_stats: SearchStats | None = None
+    self.search_mode: str = "balanced"  # balanced or aggressive
 
   def reload_connectors(self) -> None:
     """Refresh connectors after credential changes."""
@@ -247,6 +250,9 @@ class SearchEngine:
 
       ranked = rank_results(request.query, merged, use_hybrid=self._databrain is not None)
 
+      # Preserve results - only remove critically invalid datasets
+      ranked = self.preserve_results(ranked)
+
       # Limit results per source if specified
       if request.max_results_per_source:
         ranked = self._limit_results_per_source(ranked, request.max_results_per_source)
@@ -427,6 +433,9 @@ class SearchEngine:
     # Perform hybrid ranking
     ranked = rank_results(request.query, merged, use_hybrid=self._databrain is not None)
 
+    # Preserve results - only remove critically invalid datasets
+    ranked = self.preserve_results(ranked)
+
     # Log search for user behavior tracking
     if self._databrain:
       search_id = self._databrain.behavior_tracker.log_search(
@@ -483,3 +492,86 @@ class SearchEngine:
     except Exception as e:
       self._logger.error(f"Search failed for {source.value}: {e}")
       return []  # Graceful degradation: return empty list
+
+  def _is_dataset_valid(self, dataset: DatasetResult) -> tuple[bool, str]:
+    """Check if dataset is critically invalid (preserve all others).
+
+    Only remove for:
+    - Broken/invalid URLs
+    - Corrupted records
+
+    Never remove for:
+    - Missing metadata
+    - Low scores
+    - Unknown size/license
+    """
+    # Check for broken URLs
+    if dataset.url:
+      if not dataset.url.startswith(("http://", "https://", "file://", "ftp://")):
+        return False, "invalid_url_format"
+      if "invalid" in dataset.url.lower() or "null" in dataset.url.lower():
+        return False, "invalid_url_content"
+
+    # Check for corrupted records
+    if not dataset.id or not dataset.name:
+      return False, "missing_required_fields"
+
+    # Check for obviously corrupted names
+    if len(dataset.name) < 2 or len(dataset.name) > 500:
+      return False, "invalid_name_length"
+
+    # Everything else is valid - preserve it
+    return True, "valid"
+
+  def preserve_results(self, results: list[DatasetResult]) -> list[DatasetResult]:
+    """Filter only critically invalid datasets, preserve everything else.
+
+    This maximizes recall by keeping all datasets except those with:
+    - Broken URLs
+    - Corrupted data
+    - Missing required fields
+    """
+    stats = SearchStats()
+    stats.search_mode = self.search_mode
+    stats.raw_count = len(results)
+
+    preserved = []
+    for dataset in results:
+      is_valid, reason = self._is_dataset_valid(dataset)
+      if is_valid:
+        preserved.append(dataset)
+        # Track source breakdown
+        source_key = dataset.source.value
+        stats.source_counts[source_key] = stats.source_counts.get(source_key, 0) + 1
+      else:
+        stats.log_removal(dataset, reason)
+        if reason == "invalid_url_format" or reason == "invalid_url_content":
+          stats.invalid_urls_removed += 1
+        else:
+          stats.corrupted_removed += 1
+
+    stats.final_count = len(preserved)
+    stats.deduplicated_count = len(preserved)
+    self.last_search_stats = stats
+
+    # Log removal summary
+    if stats.removed_datasets:
+      self._logger.warning(
+        f"Removed {len(stats.removed_datasets)} corrupted/invalid datasets:"
+      )
+      for removal in stats.removed_datasets:
+        self._logger.warning(
+          f"  - {removal['name']} ({removal['source']}): {removal['reason']}"
+        )
+
+    return preserved
+
+  def get_search_stats(self) -> dict | None:
+    """Get statistics from last search."""
+    return self.last_search_stats.get_summary() if self.last_search_stats else None
+
+  def get_search_stats_display(self) -> str:
+    """Get formatted stats for UI display."""
+    if self.last_search_stats:
+      return self.last_search_stats.format_display()
+    return "No search performed yet"
