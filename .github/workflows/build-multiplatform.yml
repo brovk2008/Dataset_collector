@@ -20,103 +20,46 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+          pip install -e .
           pip install pyinstaller
 
       - name: Build Windows EXE
         run: |
-          pyinstaller dataset_collector.spec
+          pyinstaller dataset_collector.spec --distpath ./dist_windows
 
-      - name: Upload Windows EXE
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: windows-exe
-          path: dist/dataset_collector/dataset_collector.exe
-
-  build-macos:
-    runs-on: macos-latest
-    name: Build macOS App
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-          pip install pyinstaller
-
-      - name: Build macOS App
-        run: |
-          pyinstaller dataset_collector_macos.spec
-          cd dist
-          ditto -c -k --sequesterRsrc --keepParent "Dataset Collector.app" "Dataset_Collector_macOS.zip"
-
-      - name: Upload macOS App
-        uses: actions/upload-artifact@v4
-        with:
-          name: macos-app
-          path: dist/Dataset_Collector_macOS.zip
-
-  build-linux:
-    runs-on: ubuntu-latest
-    name: Build Linux AppImage
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.11'
-
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgl1-mesa-glx libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 libxcb-render-util0
-
-      - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-          pip install pyinstaller appimagetool patchelf
-
-      - name: Build Linux AppImage
-        run: |
-          pyinstaller dataset_collector_linux.spec
-          mkdir -p AppDir/usr/bin
-          cp -r dist/dataset_collector/* AppDir/
-          appimagetool AppDir dist/Dataset_Collector-x86_64.AppImage
-
-      - name: Upload Linux AppImage
-        uses: actions/upload-artifact@v4
-        with:
-          name: linux-appimage
-          path: dist/Dataset_Collector-x86_64.AppImage
+          path: dist_windows/dataset_collector/
 
   create-release:
-    needs: [build-windows, build-macos, build-linux]
+    needs: [build-windows]
     runs-on: ubuntu-latest
     name: Create GitHub Release
     steps:
       - uses: actions/checkout@v4
 
-      - name: Download all artifacts
+      - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
-          path: artifacts
+          name: windows-exe
+          path: release_files
 
       - name: Create Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          gh release create $TAG_NAME \
-            artifacts/windows-exe/dataset_collector.exe \
-            artifacts/macos-app/Dataset_Collector_macOS.zip \
-            artifacts/linux-appimage/Dataset_Collector-x86_64.AppImage \
-            --title "Dataset Collector $TAG_NAME" \
-            --generate-notes
+
+          # Find the executable
+          EXE_FILE=$(find release_files -name "*.exe" -type f | head -1)
+
+          if [ -f "$EXE_FILE" ]; then
+            gh release create $TAG_NAME "$EXE_FILE" \
+              --title "Dataset Collector $TAG_NAME" \
+              --generate-notes
+          else
+            echo "ERROR: No EXE file found!"
+            exit 1
+          fi
